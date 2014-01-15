@@ -1,3 +1,12 @@
+// Boost.Geometry (aka GGL, Generic Geometry Library)
+
+// Copyright (c) 2014, Oracle and/or its affiliates.
+
+// Licensed under the Boost Software License version 1.0.
+// http://www.boost.org/users/license.html
+
+// Contributed and/or modified by Menelaos Karavelas, Greece, 2014, on behalf of Oracle.
+
 #include <iostream>
 #include <fstream>
 
