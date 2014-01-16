@@ -5,8 +5,8 @@
 // Copyright (c) 2009-2012 Mateusz Loskot, London, UK.
 // Copyright (c) 2013 Adam Wulkiewicz, Lodz, Poland.
 
-// This file was modified by Oracle on 2013.
-// Modifications copyright (c) 2013, Oracle and/or its affiliates.
+// This file was modified by Oracle on 2013-2014.
+// Modifications copyright (c) 2013-2014, Oracle and/or its affiliates.
 
 // Parts of Boost.Geometry are redesigned from Geodan's Geographic Library
 // (geolib/GGL), copyright (c) 1995-2010 Geodan, Amsterdam, the Netherlands.
@@ -15,8 +15,8 @@
 // Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 
-// Contributed/Modified by Adam Wulkiewicz, Poland, 2013, on behalf of Oracle.
-// Contributed/Modified by Menelaos Karavelas, Greece, 2014, on behalf of Oracle.
+// Contributed and/or modified by Adam Wulkiewicz, 2013, on behalf of Oracle
+// Contributed and/or modified by Menelaos Karavelas, 2014, on behalf of Oracle
 
 #ifndef BOOST_GEOMETRY_ALGORITHMS_DISJOINT_HPP
 #define BOOST_GEOMETRY_ALGORITHMS_DISJOINT_HPP

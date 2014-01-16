@@ -5,7 +5,7 @@
 // Licensed under the Boost Software License version 1.0.
 // http://www.boost.org/users/license.html
 
-// Contributed and/or modified by Menelaos Karavelas, Greece, 2014, on behalf of Oracle.
+// Contributed and/or modified: Menelaos Karavelas, 2014, on behalf of Oracle
 
 #ifndef BOOST_GEOMETRY_MULTI_ALGORITHMS_DETAIL_DISTANCE_BICHROMATIC_CLOSEST_PAIR_HPP
 #define BOOST_GEOMETRY_MULTI_ALGORITHMS_DETAIL_DISTANCE_BICHROMATIC_CLOSEST_PAIR_HPP

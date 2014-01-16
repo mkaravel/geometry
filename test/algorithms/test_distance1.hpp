@@ -7,7 +7,7 @@
 // Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 
-// Contributed/Modified by Menelaos Karavelas, Greece, 2014, on behalf of Oracle.
+// Contributed and/or modified: Menelaos Karavelas, 2014, on behalf of Oracle
 
 #ifndef BOOST_GEOMETRY_TEST_DISTANCE1_HPP
 #define BOOST_GEOMETRY_TEST_DISTANCE1_HPP
