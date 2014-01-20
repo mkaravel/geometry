@@ -5,7 +5,7 @@
 // Licensed under the Boost Software License version 1.0.
 // http://www.boost.org/users/license.html
 
-// Contributed and/or modified: Menelaos Karavelas, 2014, on behalf of Oracle
+// Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
 
 #include <iostream>
 #include <fstream>
