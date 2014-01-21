@@ -13,10 +13,10 @@
 #include <cassert>
 #include <utility>
 
-typedef std::pair<double,double> point;
-
 struct random_point_generator
 {
+    typedef std::pair<double,double> point;
+
     double fmin, fmax;
 
     random_point_generator(double fmin = 0, double fmax = 1, int seed = 0)
@@ -48,19 +48,15 @@ int main(int argc, char** argv)
 
     std::ofstream ofs( argv[3] );
     assert( ofs );
-    
+
+    ofs.precision(16);
+
     ofs << n << " " << m << std::endl;
 
     random_point_generator g;
-    for (int i = 0; i < n; ++i)
+    for (int i = 0; i < n + m; ++i)
     {
-        point p = *g;
-        ofs << p.first << " " << p.second << std::endl;
-    }
-
-    for (int i = 0; i < m; ++i)
-    {
-        point p = *g;
+        random_point_generator::point p = *g;
         ofs << p.first << " " << p.second << std::endl;
     }
 
