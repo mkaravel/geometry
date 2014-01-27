@@ -72,46 +72,53 @@ struct bichromatic_closest_pair
         >::type return_type;
 
 
+    template <typename Range1, typename Range2>
     static inline return_type
-    distance_from_random_sample(MultiPoint1 const& multipoint1,
-                                MultiPoint2 const& multipoint2,
+    distance_from_random_sample(Range1 const& r1,
+                                Range2 const& r2,
                                 Strategy const& strategy)
     {
         random_integer_generator<size_type> generator;
 
-        size_type num_samples =
-            boost::size(multipoint1) + boost::size(multipoint2);
+        size_type num_samples = boost::size(r1) + boost::size(r2);
         
-        size_type i = generator(0, boost::size(multipoint1) - 1);
-        size_type j = generator(0, boost::size(multipoint2) - 1);
-        return_type dmin = strategy.apply(*(boost::begin(multipoint1) + i),
-                                          *(boost::begin(multipoint2) + j));
+        size_type i = generator(0, boost::size(r1) - 1);
+        size_type j = generator(0, boost::size(r2) - 1);
+        return_type dmin = geometry::distance(*(boost::begin(r1) + i),
+                                              *(boost::begin(r2) + j),
+                                              strategy);
 
 #ifdef PRINT_DEBUG
         std::cout << "choosing points: "
-                  << geometry::wkt(*(boost::begin(multipoint1) + i))
+                  << geometry::wkt(*(boost::begin(r1) + i))
                   << " "
-                  << geometry::wkt(*(boost::begin(multipoint2) + j))
+                  << geometry::wkt(*(boost::begin(r2) + j))
                   << std::endl;
         std::cout << "distance: " << dmin << std::endl;
 #endif
         return_type d;
         for (size_type k = 1; k < num_samples; ++k) {
-            i = generator(0, boost::size(multipoint1) - 1);
-            j = generator(0, boost::size(multipoint2) - 1);
-            d = strategy.apply(*(boost::begin(multipoint1) + i),
-                               *(boost::begin(multipoint2) + j));
+            i = generator(0, boost::size(r1) - 1);
+            j = generator(0, boost::size(r2) - 1);
+            d = geometry::distance(*(boost::begin(r1) + i),
+                                   *(boost::begin(r2) + j),
+                                   strategy);
+
 #ifdef PRINT_DEBUG
             std::cout << "choosing points: "
-                      << geometry::wkt(*(boost::begin(multipoint1) + i))
+                      << geometry::wkt(*(boost::begin(r1) + i))
                       << " "
-                      << geometry::wkt(*(boost::begin(multipoint2) + j))
+                      << geometry::wkt(*(boost::begin(r2) + j))
                       << std::endl;
             std::cout << "distance: " << d << std::endl;
 #endif
             if ( d < dmin )
             {
                 dmin = d;
+            }
+            if ( dmin == 0 )
+            {
+                return 0;
             }
         }
         return dmin;
@@ -209,7 +216,12 @@ struct bichromatic_closest_pair
     static void print_bin(Bin const& bin)
     {
         print_bin_id(bin.first);
-        std::cout << geometry::wkt(bin.second) << std::endl;
+        BOOST_AUTO_TPL(it, boost::begin(bin.second));
+        for (; it != boost::end(bin.second); ++it)
+        {
+            std::cout << geometry::wkt(*it) << ' ';
+        }
+        std::cout << std::endl;
     }
 
     template <typename Bins>
@@ -260,7 +272,10 @@ struct bichromatic_closest_pair
                 <
                     MultiPoint1, MultiPoint2, Strategy
                 >::apply(red_bin.second, blue_bin->second, strategy);
-            if ( d < dmin ) { dmin = d; }
+            if ( d < dmin )
+            {
+                dmin = d;
+            }
         }
         else
         {
