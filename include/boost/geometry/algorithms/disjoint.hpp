@@ -501,6 +501,11 @@ struct disjoint<MultiLinestring, MultiPolygon, DimensionCount, multi_linestring_
     : public detail::disjoint::disjoint_linear_areal<MultiLinestring, MultiPolygon>
 {};
 
+template<typename MultiLinestring1, typename MultiLinestring2, std::size_t DimensionCount, bool Reverse>
+struct disjoint<MultiLinestring1, MultiLinestring2, DimensionCount, multi_linestring_tag, multi_linestring_tag, Reverse>
+    : public detail::disjoint::disjoint_linear<MultiLinestring1, MultiLinestring2>
+{};
+
 template<typename Point, typename Linestring, std::size_t DimensionCount, bool Reverse>
 struct disjoint<Point, Linestring, DimensionCount, point_tag, linestring_tag, Reverse>
     : public detail::disjoint::disjoint_point_linear<Point, Linestring>
