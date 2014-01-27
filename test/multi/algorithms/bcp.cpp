@@ -15,6 +15,8 @@
 #include <boost/geometry/multi/algorithms/distance.hpp>
 #include <boost/geometry/multi/geometries/multi_point.hpp>
 #include <boost/geometry/multi/algorithms/detail/distance/bichromatic_closest_pair.hpp>
+#include <boost/geometry/multi/algorithms/detail/distance/closest_distance.hpp>
+#include <boost/geometry/multi/algorithms/detail/distance/closest_pair.hpp>
 
 #ifdef BOOST_GEOMETRY_USE_TIMER
 #include <boost/timer/timer.hpp>
@@ -27,6 +29,11 @@ typedef bg::model::multi_point<point> multi_point;
 
 typedef bg::detail::distance::bichromatic_closest_pair<multi_point,multi_point>
 BCP;
+
+typedef bg::detail::distance::closest_distance<multi_point,multi_point>
+CD;
+
+typedef bg::detail::distance::closest_pair<multi_point,multi_point> CP;
 
 int main(int argc, char** argv)
 {
@@ -84,14 +91,36 @@ int main(int argc, char** argv)
 #ifdef BOOST_GEOMETRY_USE_TIMER
         boost::timer::auto_cpu_timer t;
 #endif
-        std::cout << "distance (Rabin-like) = "
+        std::cout << "bichromatic closest-pair function (Rabin-like) = "
                   << BCP::apply(mp1, mp2) << std::endl;
     }
+    std::cout << std::endl;
     {
 #ifdef BOOST_GEOMETRY_USE_TIMER
         boost::timer::auto_cpu_timer t;
 #endif
-        std::cout << "distance (brute force) = "
+        std::cout << "closest distance function (Rabin-like) = "
+                  << CD::apply(mp1, mp2) << std::endl;
+    }
+    std::cout << std::endl;
+    {
+#ifdef BOOST_GEOMETRY_USE_TIMER
+        boost::timer::auto_cpu_timer t;
+#endif
+        CP::return_type cp = CP::apply(mp1, mp2);
+        std::cout << "closest-pair (Rabin-like) = "
+                  << bg::distance(*cp.first, *cp.second)
+                  << std::endl
+                  << bg::wkt(*cp.first)
+                  << " " << bg::wkt(*cp.second)
+                  << std::endl;
+    }
+    std::cout << std::endl;
+    {
+#ifdef BOOST_GEOMETRY_USE_TIMER
+        boost::timer::auto_cpu_timer t;
+#endif
+        std::cout << "distance (BG) = "
                   << bg::distance(mp1, mp2) << std::endl;
     }
 
