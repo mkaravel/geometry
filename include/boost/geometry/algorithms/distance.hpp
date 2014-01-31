@@ -46,6 +46,7 @@
 #include <boost/geometry/views/closeable_view.hpp>
 #include <boost/geometry/util/math.hpp>
 
+#include <boost/geometry/algorithms/detail/distance/point_to_box.hpp>
 
 namespace boost { namespace geometry
 {
@@ -965,7 +966,7 @@ struct distance
 {};
 
 
-template<typename Segment1, typename Segment2, typename Strategy>
+template <typename Segment1, typename Segment2, typename Strategy>
 struct distance
     <
          Segment1, Segment2, Strategy, segment_tag, segment_tag,
@@ -993,7 +994,7 @@ struct distance
 
 
 // dispatch for linestring-segment distances
-template<typename Linestring, typename Segment, typename Strategy>
+template <typename Linestring, typename Segment, typename Strategy>
 struct distance
     <
         Linestring, Segment, Strategy, linestring_tag, segment_tag,
@@ -1005,7 +1006,7 @@ struct distance
             >
 {};
 
-template<typename Linestring, typename Segment, typename Strategy>
+template <typename Linestring, typename Segment, typename Strategy>
 struct distance
     <
          Linestring, Segment, Strategy, linestring_tag, segment_tag,
@@ -1034,7 +1035,7 @@ struct distance
 
 
 // dispatch for linestring-linestring distances
-template<typename Linestring1, typename Linestring2, typename Strategy>
+template <typename Linestring1, typename Linestring2, typename Strategy>
 struct distance
     <
         Linestring1, Linestring2, Strategy, linestring_tag, linestring_tag,
@@ -1048,7 +1049,7 @@ struct distance
         >
 {};
 
-template<typename Linestring1, typename Linestring2, typename Strategy>
+template <typename Linestring1, typename Linestring2, typename Strategy>
 struct distance
     <
          Linestring1, Linestring2, Strategy, linestring_tag, linestring_tag,
@@ -1079,7 +1080,7 @@ struct distance
 
 
 // dispatch for ring-segment distances
-template<typename Ring, typename Segment, typename Strategy>
+template <typename Ring, typename Segment, typename Strategy>
 struct distance
     <
         Ring, Segment, Strategy, ring_tag, segment_tag,
@@ -1091,7 +1092,7 @@ struct distance
         >
 {};
 
-template<typename Ring, typename Segment, typename Strategy>
+template <typename Ring, typename Segment, typename Strategy>
 struct distance
     <
          Ring, Segment, Strategy, ring_tag, segment_tag,
@@ -1121,7 +1122,7 @@ struct distance
 
 
 // dispatch for polygon-segment distances
-template<typename Polygon, typename Segment, typename Strategy>
+template <typename Polygon, typename Segment, typename Strategy>
 struct distance
     <
         Polygon, Segment, Strategy, polygon_tag, segment_tag,
@@ -1159,7 +1160,7 @@ struct distance
 
 
 // dispatch for linestring-ring distances
-template<typename Linestring, typename Ring, typename Strategy>
+template <typename Linestring, typename Ring, typename Strategy>
 struct distance
     <
         Linestring, Ring, Strategy, linestring_tag, ring_tag,
@@ -1173,7 +1174,7 @@ struct distance
         >
 {};
 
-template<typename Linestring, typename Ring, typename Strategy>
+template <typename Linestring, typename Ring, typename Strategy>
 struct distance
     <
          Linestring, Ring, Strategy, linestring_tag, ring_tag,
@@ -1204,7 +1205,7 @@ struct distance
 
 
 // dispatch for linestring-polygon distances
-template<typename Linestring, typename Polygon, typename Strategy>
+template <typename Linestring, typename Polygon, typename Strategy>
 struct distance
     <
         Linestring, Polygon, Strategy, linestring_tag, polygon_tag,
@@ -1244,7 +1245,7 @@ struct distance
 
 
 // dispatch for polygon-polygon distances
-template<typename Polygon1, typename Polygon2, typename Strategy>
+template <typename Polygon1, typename Polygon2, typename Strategy>
 struct distance
     <
         Polygon1, Polygon2, Strategy, polygon_tag, polygon_tag,
@@ -1253,7 +1254,7 @@ struct distance
     : detail::distance::polygon_to_polygon<Polygon1, Polygon2, Strategy>
 {};
 
-template<typename Polygon1, typename Polygon2, typename Strategy>
+template <typename Polygon1, typename Polygon2, typename Strategy>
 struct distance
     <
          Polygon1, Polygon2, Strategy, polygon_tag, polygon_tag,
@@ -1276,6 +1277,45 @@ struct distance
             <
                 Polygon1, Polygon2, strategy_type
             >::apply(polygon1, polygon2, strategy_type());
+    }
+};
+
+
+// dispatch for point-box distance
+template <typename Point, typename Box, typename Strategy>
+struct distance
+    <
+         Point, Box, Strategy, point_tag, box_tag,
+         strategy_tag_distance_point_point, false
+    >
+    : detail::distance::point_to_box<Point, Box, Strategy>
+{};
+
+
+template <typename Point, typename Box, typename Strategy>
+struct distance
+    <
+         Point, Box, Strategy, point_tag, box_tag,
+         strategy_tag_distance_point_segment, false
+    >
+{
+    typedef typename strategy::distance::services::strategy_point_point
+        <
+            Strategy
+        >::type pp_strategy_type;
+
+    static inline typename return_type
+        <
+            pp_strategy_type,
+            Point,
+            typename point_type<Box>::type
+        >::type
+    apply(Point const& point, Box const& box, Strategy const&)
+    {
+        return detail::distance::point_to_box
+            <
+                Point, Box, pp_strategy_type
+            >::apply(point, box, pp_strategy_type());
     }
 };
 

@@ -41,10 +41,31 @@ void test_empty_input(Geometry1 const& geometry1, Geometry2 const& geometry2)
 #include <boost/geometry/geometries/segment.hpp>
 #include <boost/geometry/geometries/linestring.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
+#include <boost/geometry/geometries/box.hpp>
 #include <boost/geometry/multi/geometries/multi_linestring.hpp>
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
 
 #include <boost/geometry/io/wkt/write.hpp>
+
+
+template <typename Box>
+Box make_box2d(double xmin, double ymin, double xmax, double ymax)
+{
+    typedef typename bg::point_type<Box>::type BoxPoint;
+
+    return Box(BoxPoint(xmin, ymin), BoxPoint(xmax, ymax));
+}
+
+template <typename Box>
+Box make_box3d(double xmin, double ymin, double zmin,
+               double xmax, double ymax, double zmax)
+{
+    typedef typename bg::point_type<Box>::type BoxPoint;
+
+    return Box(BoxPoint(xmin, ymin, zmin), BoxPoint(xmax, ymax, zmax));
+}
+
+
 
 
 struct test_distance_of_segments
@@ -367,6 +388,106 @@ struct test_distance_of_geometries
             std::cout << std::endl;
 #endif
         }
+    }
+};
+
+
+
+template<typename Geometry, int = bg::geometry_id<Geometry>::value>
+struct test_distance_of_box_and_geometry
+{
+    template <typename Box, typename Strategy>
+    void operator()(Box const& box,
+                    std::string const& wkt,
+                    double expected_distance,
+                    double expected_comparable_distance,
+                    Strategy const& strategy) const
+    {
+        Geometry geometry = from_wkt<Geometry>(wkt);
+        operator()(box,
+                   geometry,
+                   expected_distance,
+                   expected_comparable_distance,
+                   strategy);
+    }
+
+    template <typename Box, typename Strategy>
+    void operator()(Box const& box,
+                    Geometry const& geometry,
+                    double expected_distance,
+                    double expected_comparable_distance,
+                    Strategy const& strategy) const
+    {
+#ifdef GEOMETRY_TEST_DEBUG
+        std::cout << "BOX" << bg::dsv(box) << " - "
+                  << bg::wkt(geometry) << std::endl;
+#endif
+
+        typename bg::default_distance_result<Geometry>::type distance_def
+            = bg::distance(box, geometry);
+
+        BOOST_CHECK_CLOSE(distance_def, expected_distance, 0.0001);
+
+        typename bg::default_distance_result<Geometry>::type distance_ss
+            = bg::distance(box, geometry, strategy);
+
+        BOOST_CHECK_CLOSE(distance_ss, expected_distance, 0.0001);
+
+#ifdef GEOMETRY_TEST_DEBUG
+        typename bg::default_distance_result<Geometry>::type comparable_distance_def
+            = bg::comparable_distance(box, geometry);
+
+        BOOST_CHECK_CLOSE(comparable_distance_def,
+                          expected_comparable_distance, 0.001);
+#endif
+
+        typename bg::default_distance_result<Geometry>::type comparable_distance
+            = bg::comparable_distance(box, geometry, strategy);
+
+        BOOST_CHECK_CLOSE(comparable_distance,
+                          expected_comparable_distance, 0.001);
+
+#ifdef GEOMETRY_TEST_DEBUG
+        std::cout << "distance (default strategy) = " << distance_def << " ; "
+                  << "distance (PS strategy) = " << distance_ss << " ; "
+                  << "comp. distance (default strategy) = "
+                  << comparable_distance_def << " ; "
+                  << "comp. distance (PS strategy) = " << comparable_distance
+                  << std::endl;
+#endif
+
+        distance_def = bg::distance(geometry, box, strategy);
+
+        BOOST_CHECK_CLOSE(distance_def, expected_distance, 0.0001);
+
+        distance_ss = bg::distance(geometry, box, strategy);
+
+        BOOST_CHECK_CLOSE(distance_ss, expected_distance, 0.0001);
+
+#ifdef GEOMETRY_TEST_DEBUG
+        comparable_distance_def = bg::comparable_distance(geometry, box);
+
+        BOOST_CHECK_CLOSE(comparable_distance_def,
+                          expected_comparable_distance, 0.001);
+#endif
+
+        comparable_distance =
+            bg::comparable_distance(geometry, box, strategy);
+
+        BOOST_CHECK_CLOSE(comparable_distance,
+                          expected_comparable_distance, 0.001);
+
+#ifdef GEOMETRY_TEST_DEBUG
+        std::cout << "distance[reversed args] (def. startegy) = "
+                  << distance_def << " ; "
+                  << "distance[reversed args] (PS startegy) = "
+                  << distance_ss << " ; "
+                  << "comp. distance[reversed args] (def. strategy) = "
+                  << comparable_distance << " ; "
+                  << "comp. distance[reversed args] (PS strategy) = "
+                  << comparable_distance << std::endl;
+        std::cout << std::endl;
+#endif
     }
 };
 
