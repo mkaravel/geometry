@@ -535,6 +535,50 @@ void test_distance_point_box_2d(Strategy const& strategy)
            "point(-3 4)", sqrt(13), 13, strategy);
 }
 
+
+//===========================================================================
+//===========================================================================
+//===========================================================================
+
+
+template<typename Strategy>
+void test_distance_segment_box(Strategy const& strategy)
+{
+#ifdef GEOMETRY_TEST_DEBUG
+    std::cout << std::endl;
+    std::cout << "2D segment/box distance tests" << std::endl;
+#endif
+    test_distance_of_box_and_geometry<segment_type> tester;
+
+    // segments that intersects the box
+    tester(make_box2d<box_type>(0, 0, 1, 1),
+           make_segment<segment_type>(-1, 0.5, 0.5, 0.75),
+           0, 0, strategy);
+    tester(make_box2d<box_type>(0, 0, 1, 1),
+           make_segment<segment_type>(-1, 0.5, 1.5, 0.75),
+           0, 0, strategy);
+    tester(make_box2d<box_type>(0, 0, 1, 1),
+           make_segment<segment_type>(0.5, -1, 0.5, 2),
+           0, 0, strategy);
+    tester(make_box2d<box_type>(0, 0, 1, 1),
+           make_segment<segment_type>(1, 1, 1.5, 0.75),
+           0, 0, strategy);
+    tester(make_box2d<box_type>(0, 0, 1, 1),
+           make_segment<segment_type>(2, 0, 0, 2),
+           0, 0, strategy);
+    
+    // segment that has closest point on box boundary
+    tester(make_box2d<box_type>(0, 0, 1, 1),
+           make_segment<segment_type>(4, 0.5, 5, 0.75),
+           3, 9, strategy);
+
+    // segment that has closest point on box corner
+    tester(make_box2d<box_type>(0, 0, 1, 1),
+           make_segment<segment_type>(4, 0, 0, 4),
+           sqrt(2), 2, strategy);
+}
+
+
 //===========================================================================
 //===========================================================================
 //===========================================================================
@@ -735,6 +779,9 @@ BOOST_AUTO_TEST_CASE( test_distance )
 
     test_distance_point_box_3d(point_point_strategy());
     test_distance_point_box_3d(strategy);
+
+    test_distance_segment_box(point_point_strategy());
+    test_distance_segment_box(strategy);
 
     test_more_empty_input<point_type,point_segment_strategy>(strategy);
 }

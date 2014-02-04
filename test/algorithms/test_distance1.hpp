@@ -48,6 +48,14 @@ void test_empty_input(Geometry1 const& geometry1, Geometry2 const& geometry2)
 #include <boost/geometry/io/wkt/write.hpp>
 
 
+template<typename Segment>
+Segment make_segment(double x1, double y1, double x2, double y2)
+{
+    typename bg::point_type<Segment>::type p(x1, y1), q(x2, y2);
+    return Segment(p, q);
+}
+
+
 template <typename Box>
 Box make_box2d(double xmin, double ymin, double xmax, double ymax)
 {
