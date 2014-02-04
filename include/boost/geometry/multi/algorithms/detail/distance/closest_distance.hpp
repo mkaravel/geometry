@@ -15,6 +15,7 @@
 #include <boost/geometry/multi/algorithms/distance.hpp>
 #include <boost/geometry/multi/algorithms/detail/distance/random_integer_generator.hpp>
 #include <boost/geometry/multi/algorithms/detail/distance/extremal_coordinate.hpp>
+#include <boost/geometry/multi/algorithms/detail/distance/split_to_segments.hpp>
 
 #include <cmath>
 #include <functional>
@@ -591,41 +592,6 @@ struct closest_distance_linear
 {
     typedef closest_distance_base<Geometry1, Geometry2, Strategy> Base;
 
-    template <typename LineString, typename OutputIterator>
-    static inline
-    OutputIterator split_to_segments(LineString const& ls,
-                                     OutputIterator oit)
-    {
-        typedef geometry::model::segment
-            <
-                typename point_type<LineString>::type
-            > Segment;
-
-        BOOST_AUTO_TPL(it1, boost::begin(ls));
-        BOOST_AUTO_TPL(it2, boost::begin(ls));
-
-        for (++it2; it2 != boost::end(ls); ++it1, ++it2)
-        {
-            *oit++ = Segment(*it1, *it2);
-        }
-
-        return oit;
-    }
-
-    template <typename MultiLineString, typename OutputIterator>
-    static inline
-    OutputIterator split_to_segments(MultiLineString const& mls,
-                                     OutputIterator oit, int)
-    {
-        BOOST_AUTO_TPL(it, boost::begin(mls));
-        for (; it != boost::end(mls); ++it)
-        {
-            oit = split_to_segments(*it, oit);
-        }
-
-        return oit;
-    }
-
     typedef typename Base::return_type return_type;
     typedef typename Base::Bin_id Bin_id;
     typedef typename Base::Bin_id_less Bin_id_less;
@@ -646,8 +612,10 @@ struct closest_distance_linear
         SegmentRange1 segments1;
         SegmentRange2 segments2;
 
-        split_to_segments(geometry1, std::back_inserter(segments1), 0);
-        split_to_segments(geometry2, std::back_inserter(segments2), 0);
+        split_to_segments<Geometry1>::apply(geometry1,
+                                            std::back_inserter(segments1));
+        split_to_segments<Geometry2>::apply(geometry2,
+                                            std::back_inserter(segments2));
 
 #ifdef PRINT_DEBUG
         std::cout << "segments #1: " << boost::size(segments1) << std::endl;
