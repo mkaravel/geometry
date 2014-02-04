@@ -50,8 +50,9 @@ int main(int argc, char** argv)
     assert( ifs );
 
     std::size_t n_red, n_blue;
+    double max_length;
 
-    ifs >> n_red >> n_blue;
+    ifs >> n_red >> n_blue >> max_length;
 
     for (std::size_t i = 0; i < n_red; ++i)
     {
@@ -76,6 +77,7 @@ int main(int argc, char** argv)
     std::cout.precision(16);
     std::cout << "MLS1 size: " << boost::size(mls1) << std::endl;
     std::cout << "MLS2 size: " << boost::size(mls2) << std::endl;
+    std::cout << "prescribed max length: " << max_length << std::endl;
     {
 #ifdef BOOST_GEOMETRY_USE_TIMER
         boost::timer::auto_cpu_timer t;

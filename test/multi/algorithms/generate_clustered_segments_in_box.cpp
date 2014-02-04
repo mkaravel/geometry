@@ -25,7 +25,7 @@ int main(int argc, char** argv)
 
     ofs.precision(16);
 
-    ofs << n << " " << m << std::endl;
+    ofs << n << " " << m << " -1" << std::endl;
 
     random_segment_generator g;
     for (int i = 0; i < n; ++i)
