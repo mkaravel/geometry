@@ -9,35 +9,9 @@
 
 #include <iostream>
 #include <fstream>
-#include <cstdlib>
 #include <cassert>
-#include <utility>
 
-struct random_point_generator
-{
-    typedef std::pair<double,double> point;
-
-    double fmin, fmax;
-
-    random_point_generator(double fmin = 0, double fmax = 1, int seed = 0)
-        : fmin(fmin), fmax(fmax)
-    {
-        srand(seed);
-    }
-
-    double random_coordinate() const
-    {
-        double f = static_cast<double>(rand()) / RAND_MAX;
-        return fmin + f * (fmax - fmin);
-    }
-
-    point operator*() const
-    {
-        double x = random_coordinate();
-        double y = random_coordinate();
-        return std::make_pair(x, y);
-    }
-};
+#include "random_point_generator.hpp"
 
 
 int main(int argc, char** argv)

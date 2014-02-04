@@ -16,8 +16,8 @@
 #include <boost/geometry/algorithms/intersects.hpp>
 #include <boost/geometry/multi/geometries/multi_linestring.hpp>
 #include <boost/geometry/multi/algorithms/distance.hpp>
-//#include <boost/geometry/multi/geometries/multi_point.hpp>
 #include <boost/geometry/multi/algorithms/detail/distance/closest_distance.hpp>
+#include <boost/geometry/multi/algorithms/detail/distance/closest_distance_rtree.hpp>
 
 #ifdef BOOST_GEOMETRY_USE_TIMER
 #include <boost/timer/timer.hpp>
@@ -31,8 +31,14 @@ typedef bg::model::multi_linestring<linestring> multi_linestring;
 
 typedef bg::detail::distance::closest_distance
 <
-    multi_linestring,multi_linestring
+    multi_linestring, multi_linestring
 > CD;
+
+typedef bg::detail::distance::closest_distance_rtree
+<
+    multi_linestring, multi_linestring
+> CDRT;
+
 
 int main(int argc, char** argv)
 {
@@ -70,6 +76,14 @@ int main(int argc, char** argv)
     std::cout.precision(16);
     std::cout << "MLS1 size: " << boost::size(mls1) << std::endl;
     std::cout << "MLS2 size: " << boost::size(mls2) << std::endl;
+    {
+#ifdef BOOST_GEOMETRY_USE_TIMER
+        boost::timer::auto_cpu_timer t;
+#endif
+        std::cout << "closest-distance function (R-tree) = "
+                  << CDRT::apply(mls1, mls2) << std::endl;
+    }
+    std::cout << std::endl;
     {
 #ifdef BOOST_GEOMETRY_USE_TIMER
         boost::timer::auto_cpu_timer t;

@@ -11,7 +11,7 @@
 #include <fstream>
 #include <cassert>
 
-#include "random_point_generator.hpp"
+#include "random_segment_generator.hpp"
 
 
 int main(int argc, char** argv)
@@ -27,16 +27,18 @@ int main(int argc, char** argv)
 
     ofs << n << " " << m << std::endl;
 
-    random_point_generator g;
+    random_segment_generator g;
     for (int i = 0; i < n; ++i)
     {
-        random_point_generator::point p = g.apply(0, 0.01);
-        ofs << p.first << " " << p.second << std::endl;
+        random_segment_generator::segment s = g.apply(0, 0.05);
+        ofs << s.first.first << " " << s.first.second
+            << s.second.first << " " << s.second.second << std::endl;
     }
     for (int i = 0; i < m; ++i)
     {
-        random_point_generator::point p = g.apply(0.99, 1);
-        ofs << p.first << " " << p.second << std::endl;
+        random_segment_generator::segment s = g.apply(0.95, 1);
+        ofs << s.first.first << " " << s.first.second
+            << s.second.first << " " << s.second.second << std::endl;
     }
 
     ofs.close();

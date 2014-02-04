@@ -17,6 +17,7 @@
 #include <boost/geometry/multi/algorithms/detail/distance/bichromatic_closest_pair.hpp>
 #include <boost/geometry/multi/algorithms/detail/distance/closest_distance.hpp>
 #include <boost/geometry/multi/algorithms/detail/distance/closest_pair.hpp>
+#include <boost/geometry/multi/algorithms/detail/distance/closest_distance_rtree.hpp>
 
 #ifdef BOOST_GEOMETRY_USE_TIMER
 #include <boost/timer/timer.hpp>
@@ -34,6 +35,8 @@ typedef bg::detail::distance::closest_distance<multi_point,multi_point>
 CD;
 
 typedef bg::detail::distance::closest_pair<multi_point,multi_point> CP;
+typedef bg::detail::distance::closest_distance_rtree<multi_point,multi_point>
+CDRT;
 
 int main(int argc, char** argv)
 {
@@ -87,6 +90,14 @@ int main(int argc, char** argv)
     std::cout.precision(16);
     std::cout << "MP1 size: " << boost::size(mp1) << std::endl;
     std::cout << "MP2 size: " << boost::size(mp2) << std::endl;
+    {
+#ifdef BOOST_GEOMETRY_USE_TIMER
+        boost::timer::auto_cpu_timer t;
+#endif
+        std::cout << "closest-distance function (R-tree) = "
+                  << CDRT::apply(mp1, mp2) << std::endl;
+    }
+    std::cout << std::endl;
     {
 #ifdef BOOST_GEOMETRY_USE_TIMER
         boost::timer::auto_cpu_timer t;
