@@ -112,7 +112,8 @@ struct calculate_distance< nearest<PointRelation>, Indexable, Tag >
 
     static inline bool apply(nearest<PointRelation> const& p, Indexable const& i, result_type & result)
     {
-        result = index::detail::comparable_distance_near(relation::value(p.point_or_relation), i);
+        //        result = index::detail::comparable_distance_near(relation::value(p.point_or_relation), i);
+        result = geometry::comparable_distance(relation::value(p.point_or_relation), i);
         return true;
     }
 };

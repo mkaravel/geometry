@@ -47,6 +47,7 @@
 #include <boost/geometry/util/math.hpp>
 
 #include <boost/geometry/algorithms/detail/distance/point_to_box.hpp>
+#include <boost/geometry/algorithms/detail/distance/segment_to_box.hpp>
 
 namespace boost { namespace geometry
 {
@@ -1234,7 +1235,7 @@ struct distance
     {
         typedef typename strategy::distance::projected_point
             <
-                void,Strategy
+                void, Strategy
             > strategy_type;
         return detail::distance::range_to_polygon
             <
@@ -1271,7 +1272,7 @@ struct distance
     {
         typedef typename strategy::distance::projected_point
             <
-                void,Strategy
+                void, Strategy
             > strategy_type;
         return detail::distance::polygon_to_polygon
             <
@@ -1318,6 +1319,47 @@ struct distance
             >::apply(point, box, pp_strategy_type());
     }
 };
+
+
+// dispatch for segment-box distance
+template <typename Segment, typename Box, typename Strategy>
+struct distance
+    <
+        Segment, Box, Strategy, segment_tag, box_tag,
+        strategy_tag_distance_point_point, false
+    >
+{
+    static inline typename return_type
+        <
+            Strategy,
+            typename point_type<Segment>::type,
+            typename point_type<Box>::type
+        >::type
+    apply(Segment const& segment, Box const& box, Strategy const&)
+    {
+        typedef typename strategy::distance::projected_point
+            <
+                void, Strategy
+            > strategy_type;
+
+        return detail::distance::segment_to_box
+            <
+                Segment, Box, strategy_type
+            >::apply(segment, box, strategy_type());
+    }
+};
+
+
+template <typename Segment, typename Box, typename Strategy>
+struct distance
+    <
+        Segment, Box, Strategy, segment_tag, box_tag,
+        strategy_tag_distance_point_segment, false
+    >
+    : detail::distance::segment_to_box<Segment, Box, Strategy>
+{};
+
+
 
 
 } // namespace dispatch
