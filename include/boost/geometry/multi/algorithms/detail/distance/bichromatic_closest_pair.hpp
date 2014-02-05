@@ -294,6 +294,11 @@ struct bichromatic_closest_pair
                                                        multipoint2,
                                                        strategy);
 
+        if ( dmin == 0 )
+        {
+            return 0;
+        }
+
         typedef typename std::map<Bin_id, MultiPoint1, Bin_id_less> Red_bins;
         typedef typename std::map<Bin_id, MultiPoint2, Bin_id_less> Blue_bins;
         Red_bins red_bins;

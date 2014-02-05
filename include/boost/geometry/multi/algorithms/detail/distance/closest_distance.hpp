@@ -527,7 +527,14 @@ struct closest_distance_multi_point
                                                              multipoint2,
                                                              strategy);
 
+        if ( dmin == 0 )
+        {
+            return 0;
+        }
+
+#ifdef PRINT_DEBUG
         std::cout << "closest distance estimate: " << dmin << std::endl;
+#endif
 
         typedef typename std::map<Bin_id, MultiPoint1, Bin_id_less> Red_bins;
         typedef typename std::map<Bin_id, MultiPoint2, Bin_id_less> Blue_bins;
@@ -536,8 +543,6 @@ struct closest_distance_multi_point
 
         typename point_type<MultiPoint1>::type origin
             = Base::compute_origin(multipoint1, multipoint2);
-
-        std::cout << "My origin: " << geometry::wkt(origin) << std::endl;
 
 #ifdef PRINT_DEBUG
         std::cout << "My origin: " << geometry::wkt(origin) << std::endl;

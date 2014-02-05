@@ -348,6 +348,11 @@ struct closest_pair
         Iterator1 it1 = cp.first;
         Iterator2 it2 = cp.second;
 
+        if ( dmin == 0 )
+        {
+            return std::make_pair(it1, it2);
+        }
+
 #if 1
         typedef typename std::map
             <
