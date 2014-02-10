@@ -49,33 +49,23 @@ void test_distance_segment_segment(Strategy const& strategy)
     std::cout << std::endl;
     std::cout << "segment/segment distance tests" << std::endl;
 #endif
-    test_distance_of_segments tester;
+    test_distance_of_geometries<segment_type, segment_type> tester;
 
-    {
-        segment_type s1(point_type(0,0), point_type(10,0));
-        segment_type s2(point_type(4,2), point_type(4,0.5));
+    tester(make_segment<segment_type>(0, 0, 10, 0),
+           make_segment<segment_type>(4, 2, 4, 0.5),
+           return_type(0.5), return_type(0.25), strategy);
 
-        tester(s1, s2, return_type(0.5), return_type(0.25), strategy);
-    }
-    {
-        segment_type s1(point_type(0,0), point_type(10,0));
-        segment_type s2(point_type(4,2), point_type(4,-0.5));
+    tester(make_segment<segment_type>(0, 0, 10, 0),
+           make_segment<segment_type>(4, 2, 4, -0.5),
+           return_type(0), return_type(0), strategy);
 
-        tester(s1, s2, return_type(0), return_type(0), strategy);
-    }
+    tester(make_segment<segment_type>(0, 0, 10, 0),
+           make_segment<segment_type>(4, 2, 0, 0),
+           return_type(0), return_type(0), strategy);
 
-    {
-        segment_type s1(point_type(0,0), point_type(10,0));
-        segment_type s2(point_type(4,2), point_type(0,0));
-
-        tester(s1, s2, return_type(0), return_type(0), strategy);
-    }
-    {
-        segment_type s1(point_type(0,0), point_type(10,0));
-        segment_type s2(point_type(-2,3), point_type(1,2));
-
-        tester(s1, s2, return_type(2), return_type(4), strategy);
-    }
+    tester(make_segment<segment_type>(0, 0, 10, 0),
+           make_segment<segment_type>(-2, 3, 1, 2),
+           return_type(2), return_type(4), strategy);
 }
 
 //===========================================================================
@@ -89,17 +79,15 @@ void test_distance_segment_linestring(Strategy const& strategy)
     std::cout << std::endl;
     std::cout << "segment/linestring distance tests" << std::endl;
 #endif
-    test_distance_of_segment_and_geometry<linestring_type> tester;
+    test_distance_of_geometries<segment_type, linestring_type> tester;
 
-    {
-        segment_type s(point_type(-1,-1), point_type(-2,-2));
+    tester(make_segment<segment_type>(-1, -1, -2, -2),
+           "linestring(2 1,1 2,4 0)",
+           sqrt(12.5), 12.5, strategy);
 
-        tester(s, "linestring(2 1,1 2,4 0)", sqrt(12.5), 12.5, strategy);
-    }
-    {
-        segment_type s(point_type(1,1), point_type(2,2));
-        tester(s, "linestring(2 1,1 2,4 0)", 0, 0, strategy);
-    }
+    tester(make_segment<segment_type>(1, 1, 2, 2),
+           "linestring(2 1,1 2,4 0)",
+           0, 0, strategy);
 }
 
 
@@ -114,30 +102,30 @@ void test_distance_linestring_linestring(Strategy const& strategy)
     std::cout << std::endl;
     std::cout << "linestring/linestring distance tests" << std::endl;
 #endif
-    test_distance_of_geometries<linestring_type,linestring_type> tester;
+    test_distance_of_geometries<linestring_type, linestring_type> tester;
 
-    tester("linestring(1 1)","linestring(2 1)", 1, 1, strategy);
+    tester("linestring(1 1)", "linestring(2 1)", 1, 1, strategy);
 
-    tester("linestring(1 1,3 1)","linestring(2 1, 4 1)", 0, 0, strategy);
+    tester("linestring(1 1,3 1)", "linestring(2 1, 4 1)", 0, 0, strategy);
 
-    tester("linestring(1 1,3 1)","linestring(2 1)", 0, 0, strategy);
+    tester("linestring(1 1,3 1)", "linestring(2 1)", 0, 0, strategy);
 
-    tester("linestring(1 1,2 2,3 3)","linestring(2 1,1 2,4 0)",
+    tester("linestring(1 1,2 2,3 3)", "linestring(2 1,1 2,4 0)",
            0, 0, strategy);
 
-    tester("linestring(1 1,2 2,3 3)","linestring(1 0,2 -1,4 0)",
+    tester("linestring(1 1,2 2,3 3)", "linestring(1 0,2 -1,4 0)",
            1, 1, strategy);
 
-    tester("linestring(1 1,2 2,3 3)","linestring(1 -10,2 0,2.1 -10,4 0)",
+    tester("linestring(1 1,2 2,3 3)", "linestring(1 -10,2 0,2.1 -10,4 0)",
            sqrt(2.0), 2, strategy);
 
-    tester("linestring(1 1,2 2,3 3)","linestring(1 -10,2 1.9,2.1 -10,4 0)",
+    tester("linestring(1 1,2 2,3 3)", "linestring(1 -10,2 1.9,2.1 -10,4 0)",
            sqrt(0.005), 0.005, strategy);
 
-    tester("linestring(1 1)","linestring(0 0,-2 0,2 -2,2 0)",
+    tester("linestring(1 1)", "linestring(0 0,-2 0,2 -2,2 0)",
            sqrt(2.0), 2, strategy);
 
-    tester("linestring(1 1,1 2)","linestring(0 0,-2 0,2 -2,2 0)",
+    tester("linestring(1 1,1 2)", "linestring(0 0,-2 0,2 -2,2 0)",
            sqrt(2.0), 2, strategy);
 }
 
@@ -152,20 +140,15 @@ void test_distance_segment_multilinestring(Strategy const& strategy)
     std::cout << std::endl;
     std::cout << "segment/multilinestring distance tests" << std::endl;
 #endif
-    test_distance_of_segment_and_geometry<multi_linestring_type> tester;
-    {
+    test_distance_of_geometries<segment_type, multi_linestring_type> tester;
 
-        segment_type s(point_type(-1,-1), point_type(-2,-2));
-      
-        tester(s, "multilinestring((2 1,1 2),(4 0,4 10))",
-               sqrt(12.5), 12.5, strategy);
-    }
-    {
-        segment_type s(point_type(1,1), point_type(2,2));
+    tester(make_segment<segment_type>(-1, -1, -2, -2),
+           "multilinestring((2 1,1 2),(4 0,4 10))",
+           sqrt(12.5), 12.5, strategy);
 
-        tester(s, "multilinestring((2 1,1 2),(4 0,4 10))",
-               0, 0, strategy);
-    }
+    tester(make_segment<segment_type>(1, 1, 2, 2),
+           "multilinestring((2 1,1 2),(4 0,4 10))",
+           0, 0, strategy);
 }
 
 //===========================================================================
@@ -180,7 +163,7 @@ void test_distance_linestring_multilinestring(Strategy const& strategy)
     std::cout << "linestring/multilinestring distance tests" << std::endl;
 #endif
 
-    test_distance_of_geometries<linestring_type,multi_linestring_type> tester;
+    test_distance_of_geometries<linestring_type, multi_linestring_type> tester;
 
     tester("linestring(1 1,2 2,3 3)",
            "multilinestring((2 1,1 2,4 0),(1 -10,2 1.9,2.1 -10,4 0))",
@@ -204,8 +187,10 @@ void test_distance_multilinestring_multilinestring(Strategy const& strategy)
     std::cout << "multilinestring/multilinestring distance tests" << std::endl;
 #endif
 
-    test_distance_of_geometries<multi_linestring_type,multi_linestring_type>
-        tester;
+    test_distance_of_geometries
+        <
+            multi_linestring_type, multi_linestring_type
+        > tester;
 
     tester("multilinestring((0 0,0 1,1 1),(10 0,11 1,12 2))",
            "multilinestring((0.5 0.5,0.75 0.75),(11 0,11 7))",
@@ -231,32 +216,23 @@ void test_distance_segment_polygon(Strategy const& strategy)
     std::cout << std::endl;
     std::cout << "segment/polygon distance tests" << std::endl;
 #endif
-    test_distance_of_segment_and_geometry<polygon_type> tester;
+    test_distance_of_geometries<segment_type, polygon_type> tester;
 
-    {
-        segment_type s(point_type(-1,20), point_type(1,20));
+    tester(make_segment<segment_type>(-1, 20, 1, 20),
+           "polygon((-10 -10,10 -10,10 10,-10 10,-10 -10))",
+           10, 100, strategy);
 
-        tester(s, "polygon((-10 -10,10 -10,10 10,-10 10,-10 -10))",
-               10, 100, strategy);
-    }
-    {
-        segment_type s(point_type(1,20), point_type(2,40));
+    tester(make_segment<segment_type>(1, 20, 2, 40),
+           "polygon((-10 -10,10 -10,10 10,-10 10,-10 -10))",
+           10, 100, strategy);
 
-        tester(s, "polygon((-10 -10,10 -10,10 10,-10 10,-10 -10))",
-               10, 100, strategy);
-  }
-  {
-      segment_type s(point_type(-1,20), point_type(-1,5));
+    tester(make_segment<segment_type>(-1, 20, -1, 5),
+           "polygon((-10 -10,10 -10,10 10,-10 10,-10 -10))",
+           0, 0, strategy);
 
-      tester(s, "polygon((-10 -10,10 -10,10 10,-10 10,-10 -10))",
-             0, 0, strategy);
-  }
-  {
-      segment_type s(point_type(-1,20), point_type(-1,-20));
-
-      tester(s, "polygon((-10 -10,10 -10,10 10,-10 10,-10 -10))",
-             0, 0, strategy);
-  }
+    tester(make_segment<segment_type>(-1, 20, -1, -20),
+           "polygon((-10 -10,10 -10,10 10,-10 10,-10 -10))",
+           0, 0, strategy);
 }
 
 //===========================================================================
@@ -270,7 +246,7 @@ void test_distance_linestring_polygon(Strategy const& strategy)
     std::cout << std::endl;
     std::cout << "linestring/polygon distance tests" << std::endl;
 #endif
-    test_distance_of_geometries<linestring_type,polygon_type> tester;
+    test_distance_of_geometries<linestring_type, polygon_type> tester;
 
     tester("linestring(-1 20,1 20,1 30)",
            "polygon((-10 -10,10 -10,10 10,-10 10,-10 -10))",
@@ -296,7 +272,7 @@ void test_distance_polygon_polygon(Strategy const& strategy)
     std::cout << std::endl;
     std::cout << "polygon/polygon distance tests" << std::endl;
 #endif
-    test_distance_of_geometries<polygon_type,polygon_type> tester;
+    test_distance_of_geometries<polygon_type, polygon_type> tester;
 
     tester("polygon((-10 -10,10 -10,10 10,-10 10,-10 -10))",
            "polygon((-5 20,5 20,5 25,-5 25,-5 20))",
@@ -310,7 +286,8 @@ void test_distance_polygon_polygon(Strategy const& strategy)
            "polygon((-5 20,-5 -20,5 -20,5 20,-5 20))",
            0, 0, strategy);
 
-    tester("polygon((-10 -10,10 -10,10 10,-10 10,-10 -10),(-5 -5,-5 5,5 5,5 -5,-5 -5))",
+    tester("polygon((-10 -10,10 -10,10 10,-10 10,-10 -10),\
+                    (-5 -5,-5 5,5 5,5 -5,-5 -5))",
            "polygon((-1 -1,0 0,-1 0,-1 -1))",
            4, 16, strategy);
 }
@@ -327,36 +304,27 @@ void test_distance_segment_multipolygon(Strategy const& strategy)
     std::cout << std::endl;
     std::cout << "segment/multipolygon distance tests" << std::endl;
 #endif
-    test_distance_of_segment_and_geometry<multi_polygon_type> tester;
+    test_distance_of_geometries<segment_type, multi_polygon_type> tester;
 
-    {
-        segment_type s(point_type(-1,20), point_type(1,20));
+    tester(make_segment<segment_type>(-1, 20, 1, 20),
+           "multipolygon(((-10 -10,10 -10,10 10,-10 10,-10 -10)),\
+                         ((0 22,-1 30, 2 40,0 22)))",
+           2, 4, strategy);
 
-        tester(s, "multipolygon(((-10 -10,10 -10,10 10,-10 10,-10 -10)),\
-                                ((0 22,-1 30, 2 40,0 22)))",
-               2, 4, strategy);
-    }
-    {
-        segment_type s(point_type(12,0), point_type(14,0));
+    tester(make_segment<segment_type>(12, 0, 14, 0),
+           "multipolygon(((-10 -10,10 -10,10 10,-10 10,-10 -10)),\
+                         ((20 -1,21 2,30 -10,20 -1)))",
+           2, 4, strategy);
 
-        tester(s, "multipolygon(((-10 -10,10 -10,10 10,-10 10,-10 -10)),\
-                                ((20 -1,21 2,30 -10,20 -1)))",
-               2, 4, strategy);
-    }
-    {
-        segment_type s(point_type(12,0), point_type(20.5,0.5));
-      
-        tester(s, "multipolygon(((-10 -10,10 -10,10 10,-10 10,-10 -10)),\
-                                ((20 -1,21 2,30 -10,20 -1)))",
-               0, 0, strategy);
-    }
-    {
-        segment_type s(point_type(12,0), point_type(50,0));
+    tester(make_segment<segment_type>(12, 0, 20.5, 0.5),
+           "multipolygon(((-10 -10,10 -10,10 10,-10 10,-10 -10)),\
+                         ((20 -1,21 2,30 -10,20 -1)))",
+           0, 0, strategy);
 
-        tester(s, "multipolygon(((-10 -10,10 -10,10 10,-10 10,-10 -10)),\
-                                ((20 -1,21 2,30 -10,20 -1)))",
-               0, 0, strategy);
-    }
+    tester(make_segment<segment_type>(12, 0, 50, 0),
+           "multipolygon(((-10 -10,10 -10,10 10,-10 10,-10 -10)),\
+                         ((20 -1,21 2,30 -10,20 -1)))",
+           0, 0, strategy);
 }
 
 
@@ -372,7 +340,7 @@ void test_distance_linestring_multipolygon(Strategy const& strategy)
     std::cout << std::endl;
     std::cout << "linestring/multipolygon distance tests" << std::endl;
 #endif
-    test_distance_of_geometries<linestring_type,multi_polygon_type> tester;
+    test_distance_of_geometries<linestring_type, multi_polygon_type> tester;
 
     tester("linestring(-1 20,1 20)",
            "multipolygon(((-10 -10,10 -10,10 10,-10 10,-10 -10)),\
@@ -408,8 +376,10 @@ void test_distance_multilinestring_multipolygon(Strategy const& strategy)
     std::cout << std::endl;
     std::cout << "multilinestring/multipolygon distance tests" << std::endl;
 #endif
-    test_distance_of_geometries<multi_linestring_type,multi_polygon_type>
-        tester;
+    test_distance_of_geometries
+        <
+            multi_linestring_type, multi_polygon_type
+        > tester;
 
     tester("multilinestring((12 0,14 0),(19 0,19.9 -1))",
            "multipolygon(((-10 -10,10 -10,10 10,-10 10,-10 -10)),\
@@ -437,7 +407,7 @@ void test_distance_polygon_multipolygon(Strategy const& strategy)
     std::cout << std::endl;
     std::cout << "polygon/multipolygon distance tests" << std::endl;
 #endif
-    test_distance_of_geometries<polygon_type,multi_polygon_type> tester;
+    test_distance_of_geometries<polygon_type, multi_polygon_type> tester;
 
     tester("polygon((12 0,14 0,19 0,19.9 -1,12 0))",
            "multipolygon(((-10 -10,10 -10,10 10,-10 10,-10 -10)),\
@@ -462,7 +432,7 @@ void test_distance_multipolygon_multipolygon(Strategy const& strategy)
     std::cout << std::endl;
     std::cout << "multipolygon/multipolygon distance tests" << std::endl;
 #endif
-    test_distance_of_geometries<multi_polygon_type,multi_polygon_type> tester;
+    test_distance_of_geometries<multi_polygon_type, multi_polygon_type> tester;
 
     tester("multipolygon(((12 0,14 0,14 1,12 0)),((18 0,19 0,19.9 -1,18 0)))",
            "multipolygon(((-10 -10,10 -10,10 10,-10 10,-10 -10)),\
@@ -488,7 +458,7 @@ void test_distance_point_box_2d(Strategy const& strategy)
     std::cout << std::endl;
     std::cout << "2D point/box distance tests" << std::endl;
 #endif
-    test_distance_of_box_and_geometry<point_type> tester;
+    test_distance_of_geometries<box_type, point_type> tester;
 
     // point inside box
     tester(make_box2d<box_type>(-1, -1, 1, 1),
@@ -548,7 +518,7 @@ void test_distance_segment_box(Strategy const& strategy)
     std::cout << std::endl;
     std::cout << "2D segment/box distance tests" << std::endl;
 #endif
-    test_distance_of_box_and_geometry<segment_type> tester;
+    test_distance_of_geometries<box_type, segment_type> tester;
 
     // segments that intersects the box
     tester(make_box2d<box_type>(0, 0, 1, 1),
@@ -590,7 +560,7 @@ void test_distance_point_box_3d(Strategy const& strategy)
     std::cout << std::endl;
     std::cout << "3D point/box distance tests" << std::endl;
 #endif
-    test_distance_of_box_and_geometry<point_type_3d> tester;
+    test_distance_of_geometries<box_type_3d, point_type_3d> tester;
 
     // point inside box
     tester(make_box3d<box_type_3d>(-1, -1, -1, 1, 1, 1),
@@ -754,34 +724,165 @@ void test_more_empty_input(Strategy const& strategy)
 //===========================================================================
 //===========================================================================
 
-BOOST_AUTO_TEST_CASE( test_distance )
+BOOST_AUTO_TEST_CASE( test_all_segment_segment )
 {
-    point_segment_strategy strategy;
+    point_point_strategy pp_strategy;
+    point_segment_strategy ps_strategy;
 
-    test_distance_segment_segment(strategy);
-    test_distance_segment_linestring(strategy);
-    test_distance_linestring_linestring(strategy);
-    test_distance_segment_multilinestring(strategy);
-    test_distance_linestring_multilinestring(strategy);
-    test_distance_multilinestring_multilinestring(strategy);
+    test_distance_segment_segment(pp_strategy);
+    test_distance_segment_segment(ps_strategy);
+}
 
-    test_distance_segment_polygon(strategy);
-    test_distance_linestring_polygon(strategy);
-    test_distance_polygon_polygon(strategy);
-    test_distance_segment_multipolygon(strategy);
-    test_distance_linestring_multipolygon(strategy);
-    test_distance_multilinestring_multipolygon(strategy);
-    test_distance_polygon_multipolygon(strategy);
-    test_distance_multipolygon_multipolygon(strategy);
+BOOST_AUTO_TEST_CASE( test_all_segment_linestring )
+{
+    point_point_strategy pp_strategy;
+    point_segment_strategy ps_strategy;
 
-    test_distance_point_box_2d(point_point_strategy());
-    test_distance_point_box_2d(strategy);
+    test_distance_segment_linestring(pp_strategy);
+    test_distance_segment_linestring(ps_strategy);
+}
 
-    test_distance_point_box_3d(point_point_strategy());
-    test_distance_point_box_3d(strategy);
+BOOST_AUTO_TEST_CASE( test_all_linestring_linestring )
+{
+    point_point_strategy pp_strategy;
+    point_segment_strategy ps_strategy;
 
-    test_distance_segment_box(point_point_strategy());
-    test_distance_segment_box(strategy);
+    test_distance_linestring_linestring(pp_strategy);
+    test_distance_linestring_linestring(ps_strategy);
+}
 
-    test_more_empty_input<point_type,point_segment_strategy>(strategy);
+BOOST_AUTO_TEST_CASE( test_all_segment_multilinestring )
+{
+    point_point_strategy pp_strategy;
+    point_segment_strategy ps_strategy;
+
+    test_distance_segment_multilinestring(pp_strategy);
+    test_distance_segment_multilinestring(ps_strategy);
+}
+
+BOOST_AUTO_TEST_CASE( test_all_linestring_multilinestring )
+{
+    point_point_strategy pp_strategy;
+    point_segment_strategy ps_strategy;
+
+    test_distance_linestring_multilinestring(pp_strategy);
+    test_distance_linestring_multilinestring(ps_strategy);
+}
+
+BOOST_AUTO_TEST_CASE( test_all_multilinestring_multilinestring )
+{
+    point_point_strategy pp_strategy;
+    point_segment_strategy ps_strategy;
+
+    test_distance_multilinestring_multilinestring(pp_strategy);
+    test_distance_multilinestring_multilinestring(ps_strategy);
+}
+
+BOOST_AUTO_TEST_CASE( test_all_segment_polygon )
+{
+    point_point_strategy pp_strategy;
+    point_segment_strategy ps_strategy;
+
+    test_distance_segment_polygon(pp_strategy);
+    test_distance_segment_polygon(ps_strategy);
+}
+
+BOOST_AUTO_TEST_CASE( test_all_linestring_polygon )
+{
+    point_point_strategy pp_strategy;
+    point_segment_strategy ps_strategy;
+
+    test_distance_linestring_polygon(pp_strategy);
+    test_distance_linestring_polygon(ps_strategy);
+}
+
+BOOST_AUTO_TEST_CASE( test_all_polygon_polygon )
+{
+    point_point_strategy pp_strategy;
+    point_segment_strategy ps_strategy;
+
+    test_distance_polygon_polygon(pp_strategy);
+    test_distance_polygon_polygon(ps_strategy);
+}
+
+BOOST_AUTO_TEST_CASE( test_all_segment_multipolygon )
+{
+    point_point_strategy pp_strategy;
+    point_segment_strategy ps_strategy;
+
+    test_distance_segment_multipolygon(pp_strategy);
+    test_distance_segment_multipolygon(ps_strategy);
+}
+
+BOOST_AUTO_TEST_CASE( test_all_linestring_multipolygon )
+{
+    point_point_strategy pp_strategy;
+    point_segment_strategy ps_strategy;
+
+    test_distance_linestring_multipolygon(pp_strategy);
+    test_distance_linestring_multipolygon(ps_strategy);
+}
+
+BOOST_AUTO_TEST_CASE( test_all_multilinestring_multipolygon )
+{
+    point_point_strategy pp_strategy;
+    point_segment_strategy ps_strategy;
+
+    test_distance_multilinestring_multipolygon(pp_strategy);
+    test_distance_multilinestring_multipolygon(ps_strategy);
+}
+
+BOOST_AUTO_TEST_CASE( test_all_polygon_multipolygon )
+{
+    point_point_strategy pp_strategy;
+    point_segment_strategy ps_strategy;
+
+    test_distance_polygon_multipolygon(pp_strategy);
+    test_distance_polygon_multipolygon(ps_strategy);
+}
+
+BOOST_AUTO_TEST_CASE( test_all_multipolygon_multipolygon )
+{
+    point_point_strategy pp_strategy;
+    point_segment_strategy ps_strategy;
+
+    test_distance_multipolygon_multipolygon(pp_strategy);
+    test_distance_multipolygon_multipolygon(ps_strategy);
+}
+
+BOOST_AUTO_TEST_CASE( test_all_point_box_2d )
+{
+    point_point_strategy pp_strategy;
+    point_segment_strategy ps_strategy;
+
+    test_distance_point_box_2d(pp_strategy);
+    test_distance_point_box_2d(ps_strategy);
+}
+
+BOOST_AUTO_TEST_CASE( test_all_point_box_3d )
+{
+    point_point_strategy pp_strategy;
+    point_segment_strategy ps_strategy;
+
+    test_distance_point_box_3d(pp_strategy);
+    test_distance_point_box_3d(ps_strategy);
+}
+
+BOOST_AUTO_TEST_CASE( test_all_segment_box )
+{
+    point_point_strategy pp_strategy;
+    point_segment_strategy ps_strategy;
+
+    test_distance_segment_box(pp_strategy);
+    test_distance_segment_box(ps_strategy);
+}
+
+
+BOOST_AUTO_TEST_CASE( test_all_empty_input )
+{
+    point_point_strategy pp_strategy;
+    point_segment_strategy ps_strategy;
+
+    test_more_empty_input<point_type>(pp_strategy);
+    test_more_empty_input<point_type>(ps_strategy);
 }
