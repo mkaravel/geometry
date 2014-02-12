@@ -39,6 +39,11 @@ typedef bg::detail::distance::closest_distance_rtree
     multi_linestring, multi_linestring
 > CDRT;
 
+typedef bg::detail::distance::closest_distance_rtree_linear
+<
+    multi_linestring, multi_linestring
+> CDRTL;
+
 
 int main(int argc, char** argv)
 {
@@ -78,6 +83,7 @@ int main(int argc, char** argv)
     std::cout << "MLS1 size: " << boost::size(mls1) << std::endl;
     std::cout << "MLS2 size: " << boost::size(mls2) << std::endl;
     std::cout << "prescribed max length: " << max_length << std::endl;
+    std::cout << std::endl << std::endl;
     {
 #ifdef BOOST_GEOMETRY_USE_TIMER
         boost::timer::auto_cpu_timer t;
@@ -93,6 +99,15 @@ int main(int argc, char** argv)
         std::cout << "distance (Rabin-like) = "
                   << CD::apply(mls1, mls2) << std::endl;
     }
+    std::cout << std::endl;
+    {
+#ifdef BOOST_GEOMETRY_USE_TIMER
+        boost::timer::auto_cpu_timer t;
+#endif
+        std::cout << "closest-distance function (R-tree query iterator) = "
+                  << CDRTL::apply(mls1, mls2) << std::endl;
+    }
+    std::cout << std::endl;
     {
 #ifdef BOOST_GEOMETRY_USE_TIMER
         boost::timer::auto_cpu_timer t;
@@ -100,6 +115,7 @@ int main(int argc, char** argv)
         std::cout << "intersects (get_turns) = "
                   << (bg::intersects(mls1, mls2) ? "YES" : "NO") << std::endl;
     }
+    std::cout << std::endl;
     {
 #ifdef BOOST_GEOMETRY_USE_TIMER
         boost::timer::auto_cpu_timer t;
