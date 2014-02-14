@@ -49,6 +49,8 @@
 #include <boost/geometry/algorithms/detail/distance/point_to_box.hpp>
 #include <boost/geometry/algorithms/detail/distance/segment_to_box.hpp>
 
+#include <boost/geometry/strategies/cartesian/distance_comparable_to_regular.hpp>
+
 namespace boost { namespace geometry
 {
 
@@ -106,6 +108,16 @@ struct segment_to_segment
             typename point_type<Segment2>::type
         >::type return_type;
 
+    typedef typename strategy::distance::services::comparable_type
+        <
+            Strategy
+        >::type ComparableStrategy;
+
+    typedef typename strategy::distance::services::get_comparable
+        <
+            Strategy
+        > GetComparable;
+
     static inline return_type
     apply(Segment1 const& segment1, Segment2 const& segment2,
           Strategy const& strategy)
@@ -123,6 +135,31 @@ struct segment_to_segment
         detail::assign_point_from_index<0>(segment2, q[0]);
         detail::assign_point_from_index<1>(segment2, q[1]);
 
+#ifdef BOOST_GEOMETRY_USE_COMPARABLE_DISTANCES
+        return_type d[4];
+        ComparableStrategy cstrategy = GetComparable::apply(strategy);
+        d[0] = cstrategy.apply(q[0], p[0], p[1]);
+        d[1] = cstrategy.apply(q[1], p[0], p[1]);
+        d[2] = cstrategy.apply(p[0], q[0], q[1]);
+        d[3] = cstrategy.apply(p[1], q[0], q[1]);
+
+        return_type dmin = d[0];
+        for (std::size_t i = 1; i < 4; ++i)
+        {
+            if ( d[i] < dmin )
+            {
+                dmin = d[i];
+            }
+        }
+
+        return strategy::distance::services::comparable_to_regular
+            <
+                ComparableStrategy,
+                Strategy,
+                typename point_type<Segment1>::type,
+                typename point_type<Segment2>::type
+            >::apply(dmin);
+#else
         return_type d[4];
         d[0] = strategy.apply(q[0], p[0], p[1]);
         d[1] = strategy.apply(q[1], p[0], p[1]);
@@ -139,6 +176,7 @@ struct segment_to_segment
         }
 
         return dmin;
+#endif
     }
 };
 
@@ -155,6 +193,85 @@ struct point_to_range
 {
     typedef typename return_type<PSStrategy, Point, typename point_type<Range>::type>::type return_type;
 
+#ifdef BOOST_GEOMETRY_USE_COMPARABLE_DISTANCES
+    typedef typename strategy::distance::services::comparable_type
+        <
+            PPStrategy
+        >::type ComparablePPStrategy;
+
+    typedef typename strategy::distance::services::comparable_type
+        <
+            PSStrategy
+        >::type ComparablePSStrategy;
+
+    typedef typename strategy::distance::services::get_comparable
+        <
+            PPStrategy
+        > GetComparablePP;
+
+    typedef typename strategy::distance::services::get_comparable
+        <
+            PSStrategy
+        > GetComparablePS;
+ 
+    static inline return_type apply(Point const& point, Range const& range,
+            PPStrategy const& pp_strategy, PSStrategy const& ps_strategy)
+    {
+        ComparablePPStrategy epp_strategy = GetComparablePP::apply(pp_strategy);
+        ComparablePSStrategy eps_strategy = GetComparablePS::apply(ps_strategy);
+
+        return_type const zero = return_type(0);
+
+        if (boost::size(range) == 0)
+        {
+            return zero;
+        }
+
+        typedef typename closeable_view<Range const, Closure>::type view_type;
+
+        view_type view(range);
+
+        // line of one point: return point distance
+        typedef typename boost::range_iterator<view_type const>::type iterator_type;
+        iterator_type it = boost::begin(view);
+        iterator_type prev = it++;
+        if (it == boost::end(view))
+        {
+            return strategy::distance::services::comparable_to_regular
+            <
+                ComparablePPStrategy,
+                PPStrategy,
+                Point,
+                typename point_type<Range>::type
+            >::apply( epp_strategy.apply(point, *boost::begin(view)) );
+        }
+
+        // start with first segment distance
+        return_type d = eps_strategy.apply(point, *prev, *it);
+
+        // check if other segments are closer
+        for (++prev, ++it; it != boost::end(view); ++prev, ++it)
+        {
+            return_type const ds = eps_strategy.apply(point, *prev, *it);
+            if (geometry::math::equals(ds, zero))
+            {
+                return ds;
+            }
+            else if (ds < d)
+            {
+                d = ds;
+            }
+        }
+
+        return strategy::distance::services::comparable_to_regular
+            <
+                ComparablePSStrategy,
+                PSStrategy,
+                Point,
+                typename point_type<Range>::type
+            >::apply(d);
+    }
+#else
     static inline return_type apply(Point const& point, Range const& range,
             PPStrategy const& pp_strategy, PSStrategy const& ps_strategy)
     {
@@ -203,6 +320,7 @@ struct point_to_range
 
         return rd;
     }
+#endif
 };
 
 
@@ -255,6 +373,76 @@ struct point_to_polygon
     typedef typename return_type<PPStrategy, Point, typename point_type<Polygon>::type>::type return_type;
     typedef std::pair<return_type, bool> distance_containment;
 
+#ifdef BOOST_GEOMETRY_USE_COMPARABLE_DISTANCES
+    typedef typename strategy::distance::services::comparable_type
+        <
+            PPStrategy
+        >::type ComparablePPStrategy;
+
+    typedef typename strategy::distance::services::comparable_type
+        <
+            PSStrategy
+        >::type ComparablePSStrategy;
+
+    typedef typename strategy::distance::services::get_comparable
+        <
+            PPStrategy
+        > GetComparablePP;
+
+    typedef typename strategy::distance::services::get_comparable
+        <
+            PSStrategy
+        > GetComparablePS;
+
+    static inline distance_containment apply(Point const& point,
+                Polygon const& polygon,
+                PPStrategy const& pp_strategy, PSStrategy const& ps_strategy)
+    {
+        ComparablePPStrategy cpp_strategy = GetComparablePP::apply(pp_strategy);
+        ComparablePSStrategy cps_strategy = GetComparablePS::apply(ps_strategy);
+
+        // Check distance to all rings
+        typedef point_to_ring
+            <
+                Point,
+                typename ring_type<Polygon>::type,
+                Closure,
+                ComparablePPStrategy,
+                ComparablePSStrategy
+            > per_ring;
+
+        distance_containment dc = per_ring::apply(point,
+                        exterior_ring(polygon), cpp_strategy, cps_strategy);
+
+        typename interior_return_type<Polygon const>::type rings
+                    = interior_rings(polygon);
+        for (BOOST_AUTO_TPL(it, boost::begin(rings)); it != boost::end(rings); ++it)
+        {
+            distance_containment dcr = per_ring::apply(point,
+                            *it, cpp_strategy, cps_strategy);
+            if (dcr.first < dc.first)
+            {
+                dc.first = dcr.first;
+            }
+            // If it was inside, and also inside inner ring,
+            // turn off the inside-flag, it is outside the polygon
+            if (dc.second && dcr.second)
+            {
+                dc.second = false;
+            }
+        }
+
+        return_type rd = strategy::distance::services::comparable_to_regular
+            <
+                ComparablePSStrategy,
+                PSStrategy,
+                Point,
+                typename point_type<Polygon>::type
+            >::apply(dc.first);
+
+        return std::make_pair(rd, dc.second);
+    }
+#else
     static inline distance_containment apply(Point const& point,
                 Polygon const& polygon,
                 PPStrategy const& pp_strategy, PSStrategy const& ps_strategy)
@@ -291,6 +479,7 @@ struct point_to_polygon
         }
         return dc;
     }
+#endif
 };
 
 
@@ -311,6 +500,90 @@ struct range_to_segment
             typename point_type<Segment>::type
         >::type return_type;
 
+#ifdef BOOST_GEOMETRY_USE_COMPARABLE_DISTANCES
+    typedef typename strategy::distance::services::comparable_type
+        <
+            Strategy
+        >::type ComparableStrategy;
+
+    typedef typename strategy::distance::services::get_comparable
+        <
+            Strategy
+        > GetComparable;
+
+    static inline return_type
+    apply(Range const& range, Segment const& segment,
+          Strategy const& strategy, bool check_intersection = true)
+    {
+        typedef typename strategy::distance::services::strategy_point_point
+            <
+                ComparableStrategy
+            >::type pp_strategy_type;
+
+        typedef point_to_range
+            <
+                typename point_type<Segment>::type,
+                Range,
+                Closure,
+                pp_strategy_type,
+                ComparableStrategy
+            > segment_point_to_range;
+
+        if ( check_intersection && geometry::intersects(range, segment) )
+        {
+            return 0;
+        }
+
+        // consider all distances from each endpoint of the segment
+        // to the range, and then all distances of the points in the
+        // range to the segment
+
+        
+        // initialize distance with one endpoint from the segment to
+        // the range
+        typename point_type<Segment>::type p[2];
+        detail::assign_point_from_index<0>(segment, p[0]);
+        detail::assign_point_from_index<1>(segment, p[1]);
+
+        pp_strategy_type pp_strategy;
+        ComparableStrategy cstrategy = GetComparable::apply(strategy);
+
+        return_type dmin = segment_point_to_range::apply(p[0],
+                                                         range,
+                                                         pp_strategy,
+                                                         cstrategy);
+
+        return_type d = segment_point_to_range::apply(p[1],
+                                                      range,
+                                                      pp_strategy,
+                                                      cstrategy);
+
+        if ( d < dmin )
+        {
+            dmin = d;
+        }
+
+        // check the distances from the points in the range to the segment
+        typedef typename range_iterator<Range const>::type iterator_type;
+        for (iterator_type it = boost::begin(range); it != boost::end(range); ++it)
+        {
+            d = cstrategy.apply(*it, p[0], p[1]);
+
+            if ( d < dmin )
+            {
+                dmin = d;
+            }
+        }
+
+        return strategy::distance::services::comparable_to_regular
+            <
+                ComparableStrategy,
+                Strategy,
+                typename point_type<Range>::type,
+                typename point_type<Segment>::type
+            >::apply(dmin);
+    }
+#else
     static inline return_type
     apply(Range const& range, Segment const& segment,
           Strategy const& strategy, bool check_intersection = true)
@@ -377,6 +650,7 @@ struct range_to_segment
 
         return dmin;
     }
+#endif
 };
 
 
@@ -404,6 +678,104 @@ struct range_to_range
             typename point_type<Range2>::type
         >::type return_type;
 
+#ifdef BOOST_GEOMETRY_USE_COMPARABLE_DISTANCES
+    typedef typename strategy::distance::services::comparable_type
+        <
+            Strategy
+        >::type ComparableStrategy;
+
+    typedef typename strategy::distance::services::get_comparable
+        <
+            Strategy
+        > GetComparable;
+
+    static inline return_type
+    apply(Range1 const& range1, Range2 const& range2,
+          Strategy const& strategy, bool check_intersection = true)
+    {
+        typedef typename strategy::distance::services::strategy_point_point
+            <
+                ComparableStrategy
+            >::type pp_strategy_type;
+
+        typedef point_to_range
+            <
+                typename point_type<Range1>::type,
+                Range2,
+                Closure2,
+                pp_strategy_type,
+                ComparableStrategy
+            > point1_to_range2;
+
+        typedef point_to_range
+            <
+                typename point_type<Range2>::type,
+                Range1,
+                Closure1,
+                pp_strategy_type,
+                ComparableStrategy
+            > point2_to_range1;
+
+        typedef typename range_iterator<Range1 const>::type iterator1_type;
+        typedef typename range_iterator<Range2 const>::type iterator2_type;
+
+        if ( check_intersection &&
+             geometry::intersects(range1, range2) )
+        {
+            return 0;
+        }
+
+        pp_strategy_type pp_strategy;
+        ComparableStrategy cstrategy = GetComparable::apply(strategy);
+
+        // consider all distances from each point of the first
+        // range to the second range, and vice versa (from each
+        // point of the second range to the first range)
+
+        // initialize distance with one point from first range to
+        // the second
+        iterator1_type it_r1 = boost::begin(range1);
+        return_type dmin = point1_to_range2::apply(*it_r1,
+                                                   range2,
+                                                   pp_strategy,
+                                                   cstrategy);
+
+        // check remaining point1-range2 distances
+        for (++it_r1; it_r1 != boost::end(range1); ++it_r1)
+        {
+            return_type d = point1_to_range2::apply(*it_r1,
+                                                    range2,
+                                                    pp_strategy,
+                                                    cstrategy);
+            if ( d < dmin )
+            {
+                dmin = d;
+            }
+        }
+
+        // check point2-range1 distances
+        for (iterator2_type it_r2 = boost::begin(range2);
+             it_r2 != boost::end(range2); ++it_r2)
+        {
+            return_type d = point2_to_range1::apply(*it_r2,
+                                                    range1,
+                                                    pp_strategy,
+                                                    cstrategy);
+            if ( d < dmin )
+            {
+                dmin = d;
+            }
+        }
+
+        return strategy::distance::services::comparable_to_regular
+            <
+                ComparableStrategy,
+                Strategy,
+                typename point_type<Range1>::type,
+                typename point_type<Range2>::type
+            >::apply(dmin);
+    }
+#else
     static inline return_type
     apply(Range1 const& range1, Range2 const& range2,
           Strategy const& strategy, bool check_intersection = true)
@@ -483,6 +855,7 @@ struct range_to_range
 
         return dmin;
     }
+#endif
 };
 
 // compute polygon-segment distance
@@ -496,6 +869,64 @@ struct polygon_to_segment
             typename point_type<Segment>::type
         >::type return_type;
 
+#ifdef BOOST_GEOMETRY_USE_COMPARABLE_DISTANCES
+    typedef typename strategy::distance::services::comparable_type
+       <
+           Strategy
+       >::type ComparableStrategy;
+
+    typedef typename strategy::distance::services::get_comparable
+       <
+           Strategy
+       > GetComparable;
+
+    static inline return_type
+    apply(Polygon const& polygon, Segment const& segment,
+          Strategy const& strategy)
+    {
+        typedef typename geometry::ring_type<Polygon>::type e_ring;
+        typedef typename geometry::interior_type<Polygon>::type i_rings;
+        typedef typename range_value<i_rings>::type i_ring;
+
+        if ( geometry::intersects(polygon, segment) )
+        {
+            return 0;
+        }
+
+        e_ring const& ext_ring = geometry::exterior_ring<Polygon>(polygon);
+        i_rings const& int_rings = geometry::interior_rings<Polygon>(polygon);
+
+        ComparableStrategy cstrategy = GetComparable::apply(strategy);
+
+        return_type dmin = range_to_segment
+            <
+                e_ring, Segment, closure<Polygon>::value, ComparableStrategy
+            >::apply(ext_ring, segment, cstrategy, false);
+
+        typedef typename boost::range_iterator<i_rings const>::type iterator_type;
+        for (iterator_type it = boost::begin(int_rings);
+             it != boost::end(int_rings); ++it)
+        {
+            return_type d = range_to_segment
+                <
+                    i_ring, Segment, closure<Polygon>::value, ComparableStrategy
+                >::apply(*it, segment, cstrategy, false);
+
+            if ( d < dmin )
+            {
+                dmin = d;
+            }
+        }
+
+        return strategy::distance::services::comparable_to_regular
+            <
+                ComparableStrategy,
+                Strategy,
+                typename point_type<Polygon>::type,
+                typename point_type<Segment>::type
+            >::apply(dmin);
+    }
+#else
     static inline return_type
     apply(Polygon const& polygon, Segment const& segment,
           Strategy const& strategy)
@@ -534,6 +965,7 @@ struct polygon_to_segment
 
         return dmin;
     }
+#endif
 };
 
 
@@ -870,7 +1302,10 @@ struct distance
             <
                 segment_tag,
                 Point,
-                typename point_type<Ring>::type
+                typename point_type<Ring>::type,
+                typename cs_tag<Point>::type,
+                typename cs_tag<typename point_type<Ring>::type>::type,
+                Strategy
             >::type ps_strategy_type;
 
         std::pair<return_type, bool>
@@ -905,7 +1340,10 @@ struct distance
             <
                 segment_tag,
                 Point,
-                typename point_type<Polygon>::type
+                typename point_type<Polygon>::type,
+                typename cs_tag<Point>::type,
+                typename cs_tag<typename point_type<Polygon>::type>::type,
+                Strategy
             >::type ps_strategy_type;
 
         std::pair<return_type, bool>
@@ -1024,7 +1462,7 @@ struct distance
     {
         typedef typename strategy::distance::projected_point
             <
-                void,Strategy
+                void, Strategy
             > strategy_type;
 
         return detail::distance::range_to_segment
@@ -1192,7 +1630,7 @@ struct distance
     {
         typedef typename strategy::distance::projected_point
             <
-                void,Strategy
+                void, Strategy
             > strategy_type;
         return detail::distance::range_to_range
             <

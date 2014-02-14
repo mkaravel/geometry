@@ -7,14 +7,14 @@
 
 // Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
 
-#ifndef BOOST_GEOMETRY_MULTI_ALGORITHMS_DETAIL_DISTANCE_SPLIT_TO_SEGMENTS_HPP
-#define BOOST_GEOMETRY_MULTI_ALGORITHMS_DETAIL_DISTANCE_SPLIT_TO_SEGMENTS_HPP
+#ifndef BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_SPLIT_TO_SEGMENTS_HPP
+#define BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_SPLIT_TO_SEGMENTS_HPP
 
-#include <boost/geometry/algorithms/detail/distance/split_to_segments.hpp>
-
+#include <boost/geometry/geometries/segment.hpp>
 
 namespace boost { namespace geometry
 {
+
 
 #ifndef DOXYGEN_NO_DETAIL
 namespace detail { namespace distance
@@ -108,4 +108,4 @@ struct split_to_segments
 
 }} // namespace boost::geometry
 
-#endif // BOOST_GEOMETRY_MULTI_ALGORITHMS_DETAIL_DISTANCE_SPLIT_TO_SEGMENTS_HPP
+#endif // BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_SPLIT_TO_SEGMENTS_HPP

@@ -147,6 +147,15 @@ void test_double_result_from_integer()
 
     BOOST_CHECK_CLOSE(dd, std::sqrt(0.5), 0.001);
     BOOST_CHECK_CLOSE(dc, 0.5, 0.001);
+
+    bg::model::polygon<point_type> polygon;
+    bg::read_wkt("POLYGON((0 0,1 9,8 1,0 0),(1 1,4 1,1 4,1 1))", polygon);
+
+    dd = bg::distance(point, polygon);
+    dc = bg::comparable_distance(point, polygon);
+
+    BOOST_CHECK_CLOSE(dd, std::sqrt(0.5), 0.001);
+    BOOST_CHECK_CLOSE(dc, 0.5, 0.001);
 }
 
 int test_main(int, char* [])

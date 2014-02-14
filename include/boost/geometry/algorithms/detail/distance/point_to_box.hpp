@@ -10,12 +10,15 @@
 #ifndef BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_POINT_TO_BOX_HPP
 #define BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_POINT_TO_BOX_HPP
 
-#include <boost/geometry/geometry.hpp>
+#include <boost/geometry/core/access.hpp>
+#include <boost/geometry/strategies/distance.hpp>
 
 
 namespace boost { namespace geometry
 {
 
+
+#ifndef DOXYGEN_NO_DETAIL
 namespace detail { namespace distance
 {
 
@@ -115,6 +118,8 @@ struct point_to_box
 
 
 }} // namespace detail::distance
+#endif // DOXYGEN_NO_DETAIL
+
 
 }} // namespace boost::geometry
 

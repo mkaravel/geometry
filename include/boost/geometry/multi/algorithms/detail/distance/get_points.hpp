@@ -10,41 +10,32 @@
 #ifndef BOOST_GEOMETRY_MULTI_ALGORITHMS_DETAIL_DISTANCE_GET_POINTS_HPP
 #define BOOST_GEOMETRY_MULTI_ALGORITHMS_DETAIL_DISTANCE_GET_POINTS_HPP
 
-#include <algorithm>
+#include <boost/geometry/algorithms/detail/distance/get_points.hpp>
 
 
 namespace boost { namespace geometry
 {
 
+
+#ifndef DOXYGEN_NO_DETAIL
 namespace detail { namespace distance
 {
 
 
-template <typename LineString>
-struct linestring_to_points
+
+template <typename MultiRange>
+struct get_points_multi_range
 {
     template <typename OutputIterator>
     static inline
-    OutputIterator apply(LineString const& ls, OutputIterator oit)
+    OutputIterator apply(MultiRange const& multirange, OutputIterator oit)
     {
-        return std::copy(boost::begin(ls), boost::end(ls), oit);
-    }
-};
-
-
-template <typename MultiLineString>
-struct multilinestring_to_points
-{
-    template <typename OutputIterator>
-    static inline
-    OutputIterator apply(MultiLineString const& mls, OutputIterator oit)
-    {
-        BOOST_AUTO_TPL(it, boost::begin(mls));
-        for (; it != boost::end(mls); ++it)
+        BOOST_AUTO_TPL(it, boost::begin(multirange));
+        for (; it != boost::end(multirange); ++it)
         {
-            oit = linestring_to_points
+            oit = get_points
                 <
-                    typename boost::range_value<MultiLineString>::type
+                    typename boost::range_value<MultiRange>::type
                 >::apply(*it, oit);
         }
 
@@ -56,41 +47,29 @@ struct multilinestring_to_points
 
 
 
-
-template <typename Geometry, typename GeometryTag>
-struct get_points_dispatch
-    : public not_implemented<Geometry>
-{};
-
-
-template <typename LineString>
-struct get_points_dispatch<LineString, linestring_tag>
-    : linestring_to_points<LineString>
+template <typename MultiPoint>
+struct get_points_dispatch<MultiPoint, multi_point_tag>
+    : get_points_range<MultiPoint>
 {};
 
 
 template <typename MultiLineString>
 struct get_points_dispatch<MultiLineString, multi_linestring_tag>
-    : multilinestring_to_points<MultiLineString>
+    : get_points_multi_range<MultiLineString>
 {};
 
 
-
-
-
-
-
-
-template <typename Geometry>
-struct get_points
-    : get_points_dispatch<Geometry, typename tag<Geometry>::type>
+template <typename MultiPolygon>
+struct get_points_dispatch<MultiPolygon, multi_polygon_tag>
+    : get_points_multi_range<MultiPolygon>
 {};
-
 
 
 
 }} // namespace detail::distance
+#endif // DOXYGEN_NO_DETAIL
+
 
 }} // namespace boost::geometry
 
-#endif // BOOST_GEOMETRY_MULTI_ALGORITHMS_DETAIL_DISTANCE_SPLIT_TO_SEGMENTS_HPP
+#endif // BOOST_GEOMETRY_MULTI_ALGORITHMS_DETAIL_DISTANCE_GET_POINTS_HPP
