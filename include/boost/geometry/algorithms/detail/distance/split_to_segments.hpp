@@ -11,6 +11,7 @@
 #define BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_SPLIT_TO_SEGMENTS_HPP
 
 #include <boost/geometry/geometries/segment.hpp>
+#include <boost/geometry/views/closeable_view.hpp>
 
 namespace boost { namespace geometry
 {
@@ -21,22 +22,32 @@ namespace detail { namespace distance
 {
 
 
-template <typename LineString>
-struct linestring_to_segments
+template
+<
+    typename Range,
+    closure_selector Closure
+>
+struct range_to_segments
 {
+    typedef typename closeable_view<Range const, Closure>::type View;
+
     template <typename OutputIterator>
     static inline
-    OutputIterator apply(LineString const& ls, OutputIterator oit)
+    OutputIterator apply(Range const& range, OutputIterator oit)
     {
+        BOOST_ASSERT( boost::size(range) > 1 );
+
+        View view(range);
+
         typedef geometry::model::segment
             <
-                typename point_type<LineString>::type
+                typename point_type<Range>::type
             > Segment;
 
-        BOOST_AUTO_TPL(it1, boost::begin(ls));
-        BOOST_AUTO_TPL(it2, boost::begin(ls));
+        BOOST_AUTO_TPL(it1, boost::begin(view));
+        BOOST_AUTO_TPL(it2, boost::begin(view));
 
-        for (++it2; it2 != boost::end(ls); ++it1, ++it2)
+        for (++it2; it2 != boost::end(view); ++it1, ++it2)
         {
             *oit++ = Segment(*it1, *it2);
         }
@@ -46,20 +57,28 @@ struct linestring_to_segments
 };
 
 
-template <typename MultiLineString>
-struct multilinestring_to_segments
+
+template <typename Polygon, closure_selector Closure>
+struct polygon_to_segments
 {
+    typedef typename ring_type<Polygon>::type Ring;
+
     template <typename OutputIterator>
     static inline
-    OutputIterator apply(MultiLineString const& mls, OutputIterator oit)
+    OutputIterator apply(Polygon const& polygon, OutputIterator oit)
     {
-        BOOST_AUTO_TPL(it, boost::begin(mls));
-        for (; it != boost::end(mls); ++it)
+        oit = range_to_segments
+            <
+                Ring, Closure
+            >::apply(geometry::exterior_ring(polygon), oit);
+
+        BOOST_AUTO_TPL(it, boost::begin(geometry::interior_rings(polygon)));
+        for (; it != boost::end(geometry::interior_rings(polygon)); ++it)
         {
-            oit = linestring_to_segments
+            oit = range_to_segments
                 <
-                    typename boost::range_value<MultiLineString>::type
-                >::apply(*it, oit);
+                    Ring, Closure
+                >::apply(*it, oit);            
         }
 
         return oit;
@@ -79,15 +98,18 @@ struct split_to_segments_dispatch
 
 template <typename LineString>
 struct split_to_segments_dispatch<LineString, linestring_tag>
-    : linestring_to_segments<LineString>
+    : range_to_segments<LineString, closed>
 {};
 
-
-template <typename MultiLineString>
-struct split_to_segments_dispatch<MultiLineString, multi_linestring_tag>
-    : multilinestring_to_segments<MultiLineString>
+template <typename Ring>
+struct split_to_segments_dispatch<Ring, ring_tag>
+    : range_to_segments<Ring, geometry::closure<Ring>::value>
 {};
 
+template <typename Polygon>
+struct split_to_segments_dispatch<Polygon, polygon_tag>
+    : polygon_to_segments<Polygon, geometry::closure<Polygon>::value>
+{};
 
 
 
