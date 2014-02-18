@@ -480,6 +480,10 @@ struct disjoint<Linestring, Ring, DimensionCount, linestring_tag, ring_tag, Reve
 {};
 
 // move the following specializations to multi/algorithms/disjoint.hpp?
+template<typename Linestring, typename MultiLinestring, std::size_t DimensionCount, bool Reverse>
+struct disjoint<Linestring, MultiLinestring, DimensionCount, linestring_tag, multi_linestring_tag, Reverse>
+    : public detail::disjoint::disjoint_linear<Linestring, MultiLinestring>
+{};
 
 template<typename MultiLinestring, typename Polygon, std::size_t DimensionCount, bool Reverse>
 struct disjoint<MultiLinestring, Polygon, DimensionCount, multi_linestring_tag, polygon_tag, Reverse>
