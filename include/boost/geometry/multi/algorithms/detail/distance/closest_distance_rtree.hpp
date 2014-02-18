@@ -7,8 +7,8 @@
 
 // Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
 
-#ifndef BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_CLOSEST_DISTANCE_RTREE_HPP
-#define BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_CLOSEST_DISTANCE_RTREE_HPP
+#ifndef BOOST_GEOMETRY_MULTI_ALGORITHMS_DETAIL_DISTANCE_CLOSEST_DISTANCE_RTREE_HPP
+#define BOOST_GEOMETRY_MULTI_ALGORITHMS_DETAIL_DISTANCE_CLOSEST_DISTANCE_RTREE_HPP
 
 #include <boost/foreach.hpp>
 #include <boost/range.hpp>
@@ -23,7 +23,7 @@
 
 #include <cstdlib>
 #include <cassert>
-#include <limits>
+
 
 namespace boost { namespace geometry
 {
@@ -188,7 +188,7 @@ struct range_to_range_rtree2
 
 
 template <typename MultiPoint1, typename MultiPoint2, typename Strategy>
-struct multipoint_to_multipoint
+struct multipoint_to_multipoint_rtree
 {
     typedef typename point_type<MultiPoint1>::type Point1;
     typedef typename point_type<MultiPoint2>::type Point2;
@@ -206,7 +206,7 @@ struct multipoint_to_multipoint
         if ( boost::size(multipoint1) > boost::size(multipoint2) )
 
         {
-            return multipoint_to_multipoint
+            return multipoint_to_multipoint_rtree
                 <
                     MultiPoint2, MultiPoint1, Strategy
                 >::apply(multipoint2, multipoint1, strategy);
@@ -222,7 +222,7 @@ struct multipoint_to_multipoint
 
 
 template <typename Geometry1, typename Geometry2, typename Strategy>
-struct linear_to_linear
+struct linear_to_linear_rtree
 {
     // the following works with linear geometries seen as ranges of points
     //
@@ -287,7 +287,7 @@ struct linear_to_linear
 
 
 template <typename Geometry1, typename Geometry2, typename Strategy>
-struct linear_to_linear2
+struct linear_to_linear_rtree2
 {
     typedef typename point_type<Geometry1>::type Point1;
     typedef typename point_type<Geometry2>::type Point2;
@@ -357,7 +357,7 @@ struct closest_distance_rtree_dispatch
     <
         MultiPoint1, MultiPoint2, Strategy,
         multi_point_tag, multi_point_tag
-    > : multipoint_to_multipoint<MultiPoint1, MultiPoint2, Strategy>
+    > : multipoint_to_multipoint_rtree<MultiPoint1, MultiPoint2, Strategy>
 {};
 
 
@@ -369,7 +369,7 @@ struct closest_distance_rtree_dispatch
     <
         MultiLineString1, MultiLineString2, Strategy,
         multi_linestring_tag, multi_linestring_tag
-    > : linear_to_linear<MultiLineString1, MultiLineString2, Strategy>
+    > : linear_to_linear_rtree<MultiLineString1, MultiLineString2, Strategy>
 {};
 
 
@@ -458,7 +458,7 @@ struct closest_distance_rtree_linear
                                     Geometry2 const& geometry2,
                                     Strategy const& strategy)
     {
-        return linear_to_linear2
+        return linear_to_linear_rtree2
             <
                 Geometry1,
                 Geometry2,
@@ -470,7 +470,7 @@ struct closest_distance_rtree_linear
     static inline return_type apply(Geometry1 const& geometry1,
                                     Geometry2 const& geometry2)
     {
-        return linear_to_linear2
+        return linear_to_linear_rtree2
             <
                 Geometry1,
                 Geometry2,
@@ -485,4 +485,4 @@ struct closest_distance_rtree_linear
 
 }} // namespace boost::geometry
 
-#endif // BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_CLOSEST_DISTANCE_RTREE_HPP
+#endif // BOOST_GEOMETRY_MULTI_ALGORITHMS_DETAIL_DISTANCE_CLOSEST_DISTANCE_RTREE_HPP
