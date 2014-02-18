@@ -94,6 +94,13 @@ int main(int argc, char** argv)
 #ifdef BOOST_GEOMETRY_USE_TIMER
         boost::timer::auto_cpu_timer t;
 #endif
+        std::cout << "intersects (get_turns) = "
+                  << (bg::intersects(mp1, mp2) ? "YES" : "NO") << std::endl;
+    }
+    {
+#ifdef BOOST_GEOMETRY_USE_TIMER
+        boost::timer::auto_cpu_timer t;
+#endif
         std::cout << "closest-distance function (R-tree) = "
                   << CDRT::apply(mp1, mp2) << std::endl;
     }
