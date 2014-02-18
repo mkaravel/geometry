@@ -12,7 +12,25 @@
 #ifndef BOOST_GEOMETRY_TEST_DISTANCE1_HPP
 #define BOOST_GEOMETRY_TEST_DISTANCE1_HPP
 
-#ifndef BOOST_GEOMETRY_TEST_DISTANCE
+#include <boost/geometry/algorithms/distance.hpp>
+#include <boost/geometry/multi/algorithms/distance.hpp>
+#include <boost/geometry/geometries/point.hpp>
+#include <boost/geometry/geometries/point_xy.hpp>
+#include <boost/geometry/geometries/segment.hpp>
+#include <boost/geometry/geometries/linestring.hpp>
+#include <boost/geometry/geometries/polygon.hpp>
+#include <boost/geometry/geometries/box.hpp>
+#include <boost/geometry/multi/geometries/multi_point.hpp>
+#include <boost/geometry/multi/geometries/multi_linestring.hpp>
+#include <boost/geometry/multi/geometries/multi_polygon.hpp>
+
+#include <boost/geometry/io/wkt/write.hpp>
+
+#include "from_wkt.hpp"
+
+
+
+#ifndef BOOST_GEOMETRY_TEST_DISTANCE_HPP
 
 namespace bg = ::boost::geometry;
 
@@ -31,21 +49,9 @@ void test_empty_input(Geometry1 const& geometry1, Geometry2 const& geometry2)
     }
     BOOST_CHECK_MESSAGE(false, "A empty_input_exception should have been thrown" );
 }
-#endif // BOOST_GEOMETRY_TEST_DISTANCE
+#endif // BOOST_GEOMETRY_TEST_DISTANCE_HPP
 
-#include "from_wkt.hpp"
 
-#include <boost/geometry/algorithms/distance.hpp>
-#include <boost/geometry/geometries/point.hpp>
-#include <boost/geometry/geometries/point_xy.hpp>
-#include <boost/geometry/geometries/segment.hpp>
-#include <boost/geometry/geometries/linestring.hpp>
-#include <boost/geometry/geometries/polygon.hpp>
-#include <boost/geometry/geometries/box.hpp>
-#include <boost/geometry/multi/geometries/multi_linestring.hpp>
-#include <boost/geometry/multi/geometries/multi_polygon.hpp>
-
-#include <boost/geometry/io/wkt/write.hpp>
 
 //========================================================================
 //========================================================================
