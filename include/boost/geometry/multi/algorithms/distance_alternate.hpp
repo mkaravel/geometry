@@ -222,7 +222,7 @@ struct distance_single_to_multi
                 MultiGeometry const& multi,
                 Strategy const& strategy)
     {
-        return_type min_cdist;
+        return_type min_cdist = return_type();
         bool first = true;
 
         ComparableStrategy cstrategy = GetComparable::apply(strategy);
@@ -305,7 +305,7 @@ struct distance_multi_to_multi
     static inline return_type apply(Multi1 const& multi1,
                 Multi2 const& multi2, Strategy const& strategy)
     {
-        return_type min_cdist;
+        return_type min_cdist = return_type();
         bool first = true;
 
         ComparableStrategy cstrategy = GetComparable::apply(strategy);
