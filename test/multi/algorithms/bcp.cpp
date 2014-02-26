@@ -17,7 +17,7 @@
 #include <boost/geometry/multi/algorithms/detail/distance/bichromatic_closest_pair.hpp>
 #include <boost/geometry/multi/algorithms/detail/distance/closest_distance.hpp>
 #include <boost/geometry/multi/algorithms/detail/distance/closest_pair.hpp>
-#include <boost/geometry/multi/algorithms/detail/distance/closest_distance_rtree.hpp>
+
 
 #ifdef BOOST_GEOMETRY_USE_TIMER
 #include <boost/timer/timer.hpp>
@@ -28,15 +28,71 @@ namespace bg = ::boost::geometry;
 typedef bg::model::d2::point_xy<double> point;
 typedef bg::model::multi_point<point> multi_point;
 
+// first implementation of the Rabin-like algorithm for points
 typedef bg::detail::distance::bichromatic_closest_pair<multi_point,multi_point>
 BCP;
 
+// 2nd implementation of the Rabin-like algorithm
 typedef bg::detail::distance::closest_distance<multi_point,multi_point>
 CD;
 
+// implementation of closest-pair (returns points)
 typedef bg::detail::distance::closest_pair<multi_point,multi_point> CP;
-typedef bg::detail::distance::closest_distance_rtree<multi_point,multi_point>
-CDRT;
+
+
+template <typename MultiPoint1, typename MultiPoint2>
+struct multipoint_to_multipoint
+{
+    typedef typename bg::strategy::distance::services::default_strategy
+    <
+        bg::point_tag,
+        typename bg::point_type<MultiPoint1>::type,
+        typename bg::point_type<MultiPoint2>::type
+    >::type Strategy;
+
+    typedef bg::detail::distance::distance_multi_to_multi
+    <
+        MultiPoint1, MultiPoint2, Strategy
+    > multi_to_multi;
+
+    static inline typename multi_to_multi::return_type
+    apply(MultiPoint1 const& mp1, MultiPoint2 const& mp2)
+    {        
+        return multi_to_multi::apply(mp1, mp2, Strategy());
+    }
+};
+
+
+// the old BG implementation
+typedef multipoint_to_multipoint<multi_point, multi_point> OldBG;
+
+
+template <typename MultiPoint1, typename MultiPoint2>
+struct multipoint_to_multipoint_rtree
+{
+    typedef typename bg::strategy::distance::services::default_strategy
+    <
+        bg::point_tag,
+        typename bg::point_type<MultiPoint1>::type,
+        typename bg::point_type<MultiPoint2>::type
+    >::type Strategy;
+
+    typedef bg::detail::distance::multipoint_to_multipoint
+    <
+        MultiPoint1, MultiPoint2, Strategy
+    > multi_to_multi;
+
+    static inline typename multi_to_multi::return_type
+    apply(MultiPoint1 const& mp1, MultiPoint2 const& mp2)
+    {
+        return multi_to_multi::apply(mp1, mp2, Strategy());
+    }
+};
+
+
+// the current BG implementation that uses R-Trees
+typedef multipoint_to_multipoint_rtree<multi_point, multi_point> CDRT;
+
 
 int main(int argc, char** argv)
 {
@@ -90,6 +146,7 @@ int main(int argc, char** argv)
     std::cout.precision(16);
     std::cout << "MP1 size: " << boost::size(mp1) << std::endl;
     std::cout << "MP2 size: " << boost::size(mp2) << std::endl;
+#if 0
     {
 #ifdef BOOST_GEOMETRY_USE_TIMER
         boost::timer::auto_cpu_timer t;
@@ -97,6 +154,7 @@ int main(int argc, char** argv)
         std::cout << "intersects (get_turns) = "
                   << (bg::intersects(mp1, mp2) ? "YES" : "NO") << std::endl;
     }
+#endif
     {
 #ifdef BOOST_GEOMETRY_USE_TIMER
         boost::timer::auto_cpu_timer t;
@@ -109,7 +167,7 @@ int main(int argc, char** argv)
 #ifdef BOOST_GEOMETRY_USE_TIMER
         boost::timer::auto_cpu_timer t;
 #endif
-        std::cout << "bichromatic closest-pair function (Rabin-like) = "
+        std::cout << "bichromatic closest-distance function (Rabin-like) = "
                   << BCP::apply(mp1, mp2) << std::endl;
     }
     std::cout << std::endl;
@@ -138,8 +196,8 @@ int main(int argc, char** argv)
 #ifdef BOOST_GEOMETRY_USE_TIMER
         boost::timer::auto_cpu_timer t;
 #endif
-        std::cout << "distance (BG) = "
-                  << bg::distance(mp1, mp2) << std::endl;
+        std::cout << "distance (old BG) = "
+                  << OldBG::apply(mp1, mp2) << std::endl;
     }
 
     return 0;

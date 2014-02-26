@@ -7,8 +7,8 @@
 
 // Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
 
-#ifndef BOOST_GEOMETRY_MULTI_ALGORITHMS_DETAIL_DISTANCE_CLOSEST_DISTANCE_RTREE_HPP
-#define BOOST_GEOMETRY_MULTI_ALGORITHMS_DETAIL_DISTANCE_CLOSEST_DISTANCE_RTREE_HPP
+#ifndef BOOST_GEOMETRY_MULTI_ALGORITHMS_DETAIL_DISTANCE_CLOSEST_DISTANCE_RTREE_QUERY_IT_HPP
+#define BOOST_GEOMETRY_MULTI_ALGORITHMS_DETAIL_DISTANCE_CLOSEST_DISTANCE_RTREE_QUERY_IT_HPP
 
 #include <boost/foreach.hpp>
 #include <boost/range.hpp>
@@ -36,7 +36,7 @@ namespace detail { namespace distance
 
 
 template <typename TreeRange, typename QueryRange, typename Strategy>
-struct range_to_range_rtree2
+struct range_to_range_rtree_query_iterator
 {
     typedef typename boost::range_value<TreeRange>::type TreeRangeValue;
     typedef typename boost::range_value<QueryRange>::type QueryRangeValue;
@@ -131,7 +131,7 @@ struct range_to_range_rtree2
 
 
 template <typename Geometry1, typename Geometry2, typename Strategy>
-struct linear_to_linear_rtree2
+struct linear_to_linear_rtree_query_iterator
 {
     typedef typename point_type<Geometry1>::type Point1;
     typedef typename point_type<Geometry2>::type Point2;
@@ -139,7 +139,17 @@ struct linear_to_linear_rtree2
     typedef typename strategy::distance::services::return_type
         <
             Strategy, Point1, Point2
-        >::type return_type;   
+        >::type return_type;
+
+    typedef typename strategy::distance::services::comparable_type
+        <
+            Strategy
+        >::type ComparableStrategy;
+
+    typedef typename strategy::distance::services::get_comparable
+        <
+            Strategy
+        > GetComparable;
 
 
     static inline return_type apply(Geometry1 const& geometry1,
@@ -155,6 +165,8 @@ struct linear_to_linear_rtree2
         SegmentRange1 segments1;
         SegmentRange2 segments2;
 
+        ComparableStrategy cstrategy = GetComparable::apply(strategy);
+
         split_to_segments<Geometry1>::apply(geometry1,
                                             std::back_inserter(segments1));
         split_to_segments<Geometry2>::apply(geometry2,
@@ -162,19 +174,32 @@ struct linear_to_linear_rtree2
 
         if ( boost::size(segments1) < boost::size(segments2) )
         {
-            return_type cdist = range_to_range_rtree2
+            return_type cdist = range_to_range_rtree_query_iterator
                 <
-                    SegmentRange2, SegmentRange1, Strategy
-                >::apply(segments2, segments1, strategy);
-            return std::sqrt( cdist );
+                    SegmentRange2, SegmentRange1, ComparableStrategy
+                >::apply(segments2, segments1, cstrategy);
+
+            return strategy::distance::services::comparable_to_regular
+                <
+                    ComparableStrategy,
+                    Strategy,
+                    Geometry1,
+                    Geometry2
+                >::apply( cdist );
         }
 
-        return_type cdist = range_to_range_rtree2
+        return_type cdist = range_to_range_rtree_query_iterator
             <
-                SegmentRange1, SegmentRange2, Strategy
-            >::apply(segments1, segments2, strategy);
+                SegmentRange1, SegmentRange2, ComparableStrategy
+            >::apply(segments1, segments2, cstrategy);
 
-        return std::sqrt( cdist );
+        return strategy::distance::services::comparable_to_regular
+            <
+                ComparableStrategy,
+                Strategy,
+                Geometry1,
+                Geometry2
+            >::apply( cdist );
     }
 };
 
@@ -192,7 +217,7 @@ template
         typename point_type<Geometry2>::type
     >::type
 >
-struct closest_distance_rtree_linear
+struct closest_distance_rtree_query_iterator
 {
     typedef PointToPointStrategy Strategy;
 
@@ -208,7 +233,7 @@ struct closest_distance_rtree_linear
                                     Geometry2 const& geometry2,
                                     Strategy const& strategy)
     {
-        return linear_to_linear_rtree2
+        return linear_to_linear_rtree_query_iterator
             <
                 Geometry1,
                 Geometry2,
@@ -220,7 +245,7 @@ struct closest_distance_rtree_linear
     static inline return_type apply(Geometry1 const& geometry1,
                                     Geometry2 const& geometry2)
     {
-        return linear_to_linear_rtree2
+        return linear_to_linear_rtree_query_iterator
             <
                 Geometry1,
                 Geometry2,
@@ -235,4 +260,4 @@ struct closest_distance_rtree_linear
 
 }} // namespace boost::geometry
 
-#endif // BOOST_GEOMETRY_MULTI_ALGORITHMS_DETAIL_DISTANCE_CLOSEST_DISTANCE_RTREE_HPP
+#endif // BOOST_GEOMETRY_MULTI_ALGORITHMS_DETAIL_DISTANCE_CLOSEST_DISTANCE_RTREEQUERY_IT_HPP
