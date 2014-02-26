@@ -1,5 +1,17 @@
-#ifndef BOOST_GEOMETRY_STRATGIES_CARTESIAN_DISTANCE_COMPARABLE_TO_REGULAR_HPP
-#define BOOST_GEOMETRY_STRATGIES_CARTESIAN_DISTANCE_COMPARABLE_TO_REGULAR_HPP
+// Boost.Geometry (aka GGL, Generic Geometry Library)
+
+// Copyright (c) 2014, Oracle and/or its affiliates.
+
+// Licensed under the Boost Software License version 1.0.
+// http://www.boost.org/users/license.html
+
+// Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
+
+#ifndef BOOST_GEOMETRY_STRATEGIES_CARTESIAN_DISTANCE_COMPARABLE_TO_REGULAR_HPP
+#define BOOST_GEOMETRY_STRATEGIES_CARTESIAN_DISTANCE_COMPARABLE_TO_REGULAR_HPP
+
+
+#include <boost/geometry/strategies/distance_comparable_to_regular.hpp>
 
 
 namespace boost { namespace geometry
@@ -23,6 +35,11 @@ template
     typename Geometry2
 >
 struct comparable_to_regular
+    <
+        ComparableStrategy, Strategy,
+        Geometry1, Geometry2,
+        cartesian_tag, cartesian_tag
+    >
 {
     typedef typename return_type
         <
@@ -52,7 +69,9 @@ struct comparable_to_regular
         ComparableStrategy,
         ComparableStrategy,
         Geometry1,
-        Geometry2
+        Geometry2,
+        cartesian_tag,
+        cartesian_tag
     >
 {
     typedef typename return_type
@@ -83,4 +102,4 @@ struct comparable_to_regular
 
 }} // namespace boost::geometry
 
-#endif // BOOST_GEOMETRY_STRATGIES_CARTESIAN_DISTANCE_COMPARABLE_TO_REGULAR_HPP
+#endif // BOOST_GEOMETRY_STRATEGIES_CARTESIAN_DISTANCE_COMPARABLE_TO_REGULAR_HPP
