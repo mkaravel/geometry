@@ -3,11 +3,10 @@
 
 // Copyright (c) 2014, Oracle and/or its affiliates.
 
-// Use, modification and distribution is subject to the Boost Software License,
-// Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
-// http://www.boost.org/LICENSE_1_0.txt)
-
 // Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
+
+// Licensed under the Boost Software License version 1.0.
+// http://www.boost.org/users/license.html
 
 #include <iostream>
 

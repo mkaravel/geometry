@@ -2,10 +2,10 @@
 
 // Copyright (c) 2014, Oracle and/or its affiliates.
 
+// Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
+
 // Licensed under the Boost Software License version 1.0.
 // http://www.boost.org/users/license.html
-
-// Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
 
 #ifndef BOOST_GEOMETRY_STRATEGIES_DISTANCE_COMPARABLE_TO_REGULAR_HPP
 #define BOOST_GEOMETRY_STRATEGIES_DISTANCE_COMPARABLE_TO_REGULAR_HPP
