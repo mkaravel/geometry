@@ -24,11 +24,7 @@
 #include <boost/mpl/if.hpp>
 #include <geometry_test_common.hpp>
 
-#ifndef BOOST_GEOMETRY_ALTERNATE_DISTANCE
 #include <boost/geometry/geometry.hpp>
-#else
-#include <boost/geometry/algorithms/distance.hpp>
-#endif
 
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/linestring.hpp>
