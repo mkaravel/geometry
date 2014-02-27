@@ -10,8 +10,17 @@
 #ifndef BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_SPLIT_TO_SEGMENTS_HPP
 #define BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_SPLIT_TO_SEGMENTS_HPP
 
+#include <boost/range.hpp>
+
+#include <boost/geometry/core/tags.hpp>
+#include <boost/geometry/core/point_type.hpp>
+#include <boost/geometry/multi/core/tags.hpp>
+#include <boost/geometry/multi/core/point_type.hpp>
+
 #include <boost/geometry/geometries/segment.hpp>
+
 #include <boost/geometry/algorithms/not_implemented.hpp>
+
 #include <boost/geometry/views/closeable_view.hpp>
 
 namespace boost { namespace geometry

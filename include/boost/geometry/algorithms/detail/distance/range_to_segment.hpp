@@ -10,35 +10,23 @@
 #ifndef BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_RANGE_TO_SEGMENT_HPP
 #define BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_RANGE_TO_SEGMENT_HPP
 
-#include <boost/concept_check.hpp>
-#include <boost/mpl/if.hpp>
 #include <boost/range.hpp>
-#include <boost/typeof/typeof.hpp>
 
 #include <boost/geometry/core/cs.hpp>
 #include <boost/geometry/core/closure.hpp>
 #include <boost/geometry/core/reverse_dispatch.hpp>
 #include <boost/geometry/core/tag_cast.hpp>
 
-#include <boost/geometry/algorithms/not_implemented.hpp>
-#include <boost/geometry/algorithms/detail/throw_on_empty_input.hpp>
-
 #include <boost/geometry/geometries/segment.hpp>
-#include <boost/geometry/geometries/concepts/check.hpp>
 
 #include <boost/geometry/strategies/distance.hpp>
-#include <boost/geometry/strategies/default_distance_result.hpp>
+#include <boost/geometry/strategies/distance_comparable_to_regular.hpp>
+
 #include <boost/geometry/algorithms/assign.hpp>
-#include <boost/geometry/algorithms/within.hpp>
 #include <boost/geometry/algorithms/intersects.hpp>
 
 #include <boost/geometry/views/closeable_view.hpp>
-#include <boost/geometry/util/math.hpp>
 
-#include <boost/geometry/algorithms/detail/distance/point_to_box.hpp>
-#include <boost/geometry/algorithms/detail/distance/segment_to_box.hpp>
-
-#include <boost/geometry/strategies/cartesian/distance_comparable_to_regular.hpp>
 
 namespace boost { namespace geometry
 {

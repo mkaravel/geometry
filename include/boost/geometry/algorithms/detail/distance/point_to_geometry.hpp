@@ -48,7 +48,7 @@
 #include <boost/geometry/algorithms/detail/distance/default_strategies.hpp>
 #include <boost/geometry/algorithms/detail/distance/point_to_box.hpp>
 
-#include <boost/geometry/strategies/cartesian/distance_comparable_to_regular.hpp>
+#include <boost/geometry/strategies/distance_comparable_to_regular.hpp>
 
 
 namespace boost { namespace geometry

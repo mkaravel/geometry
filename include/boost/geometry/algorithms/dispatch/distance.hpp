@@ -23,6 +23,7 @@
 #include <boost/geometry/algorithms/distance.hpp>
 
 #include <boost/range.hpp>
+#include <boost/numeric/conversion/bounds.hpp>
 
 #include <boost/geometry/core/closure.hpp>
 
@@ -32,13 +33,21 @@
 #include <boost/geometry/algorithms/within.hpp>
 #include <boost/geometry/algorithms/intersects.hpp>
 
-#include <boost/geometry/strategies/cartesian/distance_comparable_to_regular.hpp>
+#include <boost/geometry/strategies/distance_comparable_to_regular.hpp>
 
 #include <boost/geometry/views/closeable_view.hpp>
 #include <boost/geometry/util/math.hpp>
 
-// the implementation details
+#include <boost/geometry/multi/core/tags.hpp>
+#include <boost/geometry/multi/core/geometry_id.hpp>
+#include <boost/geometry/multi/core/point_type.hpp>
+#include <boost/geometry/multi/geometries/concepts/check.hpp>
 
+#include <boost/geometry/multi/algorithms/num_points.hpp>
+#include <boost/geometry/util/select_coordinate_type.hpp>
+
+
+// the implementation details
 #include <boost/geometry/algorithms/detail/distance/point_to_geometry.hpp>
 #include <boost/geometry/algorithms/detail/distance/range_to_range.hpp>
 #include <boost/geometry/algorithms/detail/distance/range_to_segment.hpp>
@@ -46,8 +55,6 @@
 #include <boost/geometry/algorithms/detail/distance/polygon_to_segment.hpp>
 #include <boost/geometry/algorithms/detail/distance/single_to_multi.hpp>
 #include <boost/geometry/algorithms/detail/distance/multipoint_to_range.hpp>
-
-//#include <boost/geometry/multi/algorithms/distance_alternate.hpp>
 
 
 namespace boost { namespace geometry

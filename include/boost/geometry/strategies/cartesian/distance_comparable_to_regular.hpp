@@ -11,8 +11,9 @@
 #define BOOST_GEOMETRY_STRATEGIES_CARTESIAN_DISTANCE_COMPARABLE_TO_REGULAR_HPP
 
 
+#include <cmath>
 #include <boost/geometry/strategies/distance_comparable_to_regular.hpp>
-
+#include <boost/geometry/core/point_type.hpp>
 
 namespace boost { namespace geometry
 {

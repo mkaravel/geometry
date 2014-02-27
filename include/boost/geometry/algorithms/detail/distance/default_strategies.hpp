@@ -20,6 +20,9 @@
 #ifndef BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_DEFAULT_STRATEGIES_HPP
 #define BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_DEFAULT_STRATEGIES_HPP
 
+#include <boost/geometry/core/tags.hpp>
+#include <boost/geometry/core/point_type.hpp>
+#include <boost/geometry/strategies/distance.hpp>
 
 namespace boost { namespace geometry
 {

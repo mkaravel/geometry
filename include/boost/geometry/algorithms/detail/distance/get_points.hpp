@@ -11,6 +11,12 @@
 #define BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_GET_POINTS_HPP
 
 #include <algorithm>
+
+#include <boost/geometry/core/tags.hpp>
+#include <boost/geometry/core/point_type.hpp>
+#include <boost/geometry/multi/core/tags.hpp>
+#include <boost/geometry/multi/core/point_type.hpp>
+
 #include <boost/geometry/algorithms/not_implemented.hpp>
 
 namespace boost { namespace geometry
