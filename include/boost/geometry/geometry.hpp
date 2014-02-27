@@ -7,9 +7,14 @@
 // Parts of Boost.Geometry are redesigned from Geodan's Geographic Library
 // (geolib/GGL), copyright (c) 1995-2010 Geodan, Amsterdam, the Netherlands.
 
+// This file was modified by Oracle on 2014.
+// Modifications copyright (c) 2014, Oracle and/or its affiliates.
+
 // Use, modification and distribution is subject to the Boost Software License,
 // Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
+
+// Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
 
 #ifndef BOOST_GEOMETRY_GEOMETRY_HPP
 #define BOOST_GEOMETRY_GEOMETRY_HPP
@@ -89,5 +94,7 @@
 
 #include <boost/geometry/io/io.hpp>
 #include <boost/geometry/io/svg/svg_mapper.hpp>
+
+#include <boost/geometry/algorithms/dispatch/distance.hpp>
 
 #endif // BOOST_GEOMETRY_GEOMETRY_HPP

@@ -13,7 +13,7 @@
 #define BOOST_GEOMETRY_TEST_DISTANCE1_HPP
 
 #include <boost/geometry/algorithms/distance.hpp>
-#include <boost/geometry/multi/algorithms/distance.hpp>
+#include <boost/geometry/algorithms/dispatch/distance.hpp>
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/segment.hpp>

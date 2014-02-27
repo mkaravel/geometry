@@ -13,7 +13,7 @@
 #include <boost/foreach.hpp>
 #include <boost/range.hpp>
 
-#include <boost/geometry/algorithms/distance_basic.hpp>
+#include <boost/geometry/algorithms/detail/distance/point_to_geometry.hpp>
 #include <boost/geometry/algorithms/comparable_distance.hpp>
 #include <boost/geometry/algorithms/intersects.hpp>
 #include <boost/geometry/algorithms/detail/distance/get_points.hpp>

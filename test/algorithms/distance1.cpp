@@ -9,8 +9,6 @@
 
 // Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
 
-#define BOOST_GEOMETRY_ALTERNATE_DISTANCE
-
 #include <iostream>
 
 #ifndef BOOST_TEST_MODULE

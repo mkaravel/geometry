@@ -12,6 +12,7 @@
 #include <geometry_test_common.hpp>
 
 #include <boost/geometry/algorithms/distance.hpp>
+#include <boost/geometry/algorithms/dispatch/distance.hpp>
 #include <boost/geometry/io/wkt/read.hpp>
 #include <boost/geometry/strategies/strategies.hpp>
 

@@ -11,6 +11,7 @@
 #define BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_GET_POINTS_HPP
 
 #include <algorithm>
+#include <boost/geometry/algorithms/not_implemented.hpp>
 
 namespace boost { namespace geometry
 {
@@ -20,6 +21,25 @@ namespace boost { namespace geometry
 namespace detail { namespace distance
 {
 
+
+// generic definitions
+
+template <typename Geometry, typename GeometryTag>
+struct get_points_dispatch
+    : public not_implemented<Geometry>
+{};
+
+
+template <typename Geometry>
+struct get_points
+    : get_points_dispatch<Geometry, typename tag<Geometry>::type>
+{};
+
+
+
+
+
+// implementation and specializations
 
 template <typename Point>
 struct get_points_point
@@ -86,13 +106,30 @@ struct get_points_polygon
 };
 
 
+template <typename MultiRange>
+struct get_points_multi_range
+{
+    template <typename OutputIterator>
+    static inline
+    OutputIterator apply(MultiRange const& multirange, OutputIterator oit)
+    {
+        BOOST_AUTO_TPL(it, boost::begin(multirange));
+        for (; it != boost::end(multirange); ++it)
+        {
+            oit = get_points
+                <
+                    typename boost::range_value<MultiRange>::type
+                >::apply(*it, oit);
+        }
+
+        return oit;
+    }
+};
 
 
-template <typename Geometry, typename GeometryTag>
-struct get_points_dispatch
-    : public not_implemented<Geometry>
-{};
 
+
+// dispatch specializations
 template <typename Point>
 struct get_points_dispatch<Point, point_tag>
     : get_points_point<Point>
@@ -118,15 +155,21 @@ struct get_points_dispatch<Polygon, polygon_tag>
     : get_points_polygon<Polygon>
 {};
 
-
-
-
-
-
-template <typename Geometry>
-struct get_points
-    : get_points_dispatch<Geometry, typename tag<Geometry>::type>
+template <typename MultiPoint>
+struct get_points_dispatch<MultiPoint, multi_point_tag>
+    : get_points_range<MultiPoint>
 {};
+
+template <typename MultiLineString>
+struct get_points_dispatch<MultiLineString, multi_linestring_tag>
+    : get_points_multi_range<MultiLineString>
+{};
+
+template <typename MultiPolygon>
+struct get_points_dispatch<MultiPolygon, multi_polygon_tag>
+    : get_points_multi_range<MultiPolygon>
+{};
+
 
 
 
