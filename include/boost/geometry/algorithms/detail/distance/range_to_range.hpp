@@ -132,13 +132,26 @@ struct range_to_range
         CollectPoints1, CollectPoints2,
         true, false
     >
-    : range_to_range
+{
+    typedef typename return_type
         <
-            Range2, Range1, Strategy,
-            CollectPoints2, CollectPoints1,
-            false, true
-        >
-{};
+            Strategy,
+            typename point_type<Range1>::type,
+            typename point_type<Range2>::type
+        >::type return_type;
+
+    static inline return_type
+    apply(Range1 const& range1, Range2 const& range2,
+          Strategy const& strategy, bool check_intersection = true)
+    {
+        return range_to_range
+            <
+                Range2, Range1, Strategy,
+                CollectPoints2, CollectPoints1,
+                false, true
+            >::apply(range2, range1, strategy, check_intersection);
+    }
+};
 
 
 template
@@ -167,17 +180,11 @@ struct range_to_range
     apply(Range1 const& range1, Range2 const& range2,
           Strategy const& strategy, bool check_intersection = true)
     {
-#if 0
         if ( boost::size(range1) == 1 )
         {
-            return dispatch::distance
-                <
-                    typename point_type<Range1>::type,
-                    Range2,
-                    Strategy
-                >::apply(*boost::begin(range1), range2, strategy);
+            return geometry::distance(*boost::begin(range1), range2, strategy);
         }
-#endif
+
         return range_to_range
             <
                 Range1, Range2, Strategy,
@@ -214,27 +221,16 @@ struct range_to_range
     apply(Range1 const& range1, Range2 const& range2,
           Strategy const& strategy, bool check_intersection = true)
     {
-#if 0
         if ( boost::size(range1) == 1 )
         {
-            return dispatch::distance
-                <
-                    typename point_type<Range1>::type,
-                    Range2,
-                    Strategy
-                >::apply(*boost::begin(range1), range2, strategy);
+            return geometry::distance(*boost::begin(range1), range2, strategy);
         }
 
         if ( boost::size(range2) == 1 )
         {
-            return dispatch::distance
-                <
-                    typename point_type<Range2>::type,
-                    Range1,
-                    Strategy
-                >::apply(*boost::begin(range2), range1, strategy);
+            return geometry::distance(*boost::begin(range2), range1, strategy);
         }
-#endif
+
         return range_to_range
             <
                 Range1, Range2, Strategy,

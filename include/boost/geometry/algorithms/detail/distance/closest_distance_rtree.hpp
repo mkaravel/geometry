@@ -13,8 +13,7 @@
 #include <boost/foreach.hpp>
 #include <boost/range.hpp>
 
-#include <boost/geometry/algorithms/detail/distance/point_to_geometry.hpp>
-#include <boost/geometry/algorithms/comparable_distance.hpp>
+#include <boost/geometry/algorithms/distance.hpp>
 #include <boost/geometry/algorithms/intersects.hpp>
 #include <boost/geometry/algorithms/detail/distance/get_points.hpp>
 #include <boost/geometry/algorithms/detail/distance/split_to_segments.hpp>
@@ -28,117 +27,6 @@ namespace boost { namespace geometry
 #ifndef DOXYGEN_NO_DETAIL
 namespace detail { namespace distance
 {
-
-// Code to select the correct internal call for distance computations. 
-// The two options are point-to-point or point-to-segment.
-
-
-template
-<
-    typename Geometry1,
-    typename Geometry2,
-    typename Strategy,
-    typename Tag1 = typename tag<Geometry1>::type,
-    typename Tag2 = typename tag<Geometry2>::type,
-    typename StrategyTag = typename strategy::distance::services::tag<Strategy>::type
->
-struct distance_caller
-    : not_implemented<Geometry1, Geometry2>
-{};
-
-
-template
-<
-    typename Point1,
-    typename Point2,
-    typename Strategy
->
-struct distance_caller
-    <
-        Point1, Point2, Strategy,
-        point_tag, point_tag, strategy_tag_distance_point_point
-    > : point_to_point<Point1, Point2, Strategy>
-{};
-
-
-template
-<
-    typename Point1,
-    typename Point2,
-    typename Strategy
->
-struct distance_caller
-    <
-        Point1, Point2, Strategy,
-        point_tag, point_tag, strategy_tag_distance_point_segment
-    >
-{
-    typedef typename strategy::distance::services::return_type
-        <
-            Strategy,
-            Point1,
-            Point2
-        >::type return_type;   
-
-    static inline return_type
-    apply(Point1 const& point1, Point2 const& point2, Strategy const&)
-    {
-        typedef typename strategy::distance::services::strategy_point_point
-            <
-                Strategy
-            >::type PPStrategy;
-        return point_to_point
-            <
-                Point1, Point2, PPStrategy
-            >::apply(point1, point2, PPStrategy());
-    }
-};
-
-template
-<
-    typename Point,
-    typename Segment,
-    typename Strategy
->
-struct distance_caller
-    <
-        Point, Segment, Strategy,
-        point_tag, segment_tag, strategy_tag_distance_point_point
-    > : point_to_segment<Point, Segment, Strategy>
-{};
-
-
-template
-<
-    typename Point,
-    typename Segment,
-    typename Strategy
->
-struct distance_caller
-    <
-        Point, Segment, Strategy,
-        point_tag, segment_tag, strategy_tag_distance_point_segment
-    >
-{
-    typedef typename strategy::distance::services::return_type
-        <
-            Strategy,
-            Point,
-            typename point_type<Segment>::type
-        >::type return_type;   
-
-    static inline return_type
-    apply(Point const& point, Segment const& segment, Strategy const& strategy)
-    {
-        typename point_type<Segment>::type p[2];
-        geometry::detail::assign_point_from_index<0>(segment, p[0]);
-        geometry::detail::assign_point_from_index<1>(segment, p[1]);
-        return strategy.apply(point, p[0], p[1]);
-    }
-};
-
-
-
 
 
 template <typename TreeRange, typename QueryRange, typename Strategy>
@@ -173,12 +61,7 @@ struct range_to_range_rtree
         RTreeValue t_v;
         std::size_t n = rt.query(index::nearest(q_v, 1), &t_v);
         assert( n > 0 );
-        return_type min_cd =
-            //geometry::comparable_distance(t_v, q_v, strategy);
-            distance_caller
-                <
-                    RTreeValue, QueryValue, Strategy
-                >::apply(t_v, q_v, strategy);
+        return_type min_cd = geometry::distance(t_v, q_v, strategy);
 
         ++it;
         for (; it != boost::end(q_range); ++it)
@@ -186,12 +69,7 @@ struct range_to_range_rtree
             q_v = *it;
             n = rt.query(index::nearest(q_v, 1), &t_v);
             assert( n > 0 );
-            return_type cd =
-                // geometry::comparable_distance(t_v, q_v, strategy);
-                distance_caller
-                    <
-                        RTreeValue, QueryValue, Strategy
-                    >::apply(t_v, q_v, strategy);
+            return_type cd = geometry::distance(t_v, q_v, strategy);
 
             if ( cd < min_cd )
             {

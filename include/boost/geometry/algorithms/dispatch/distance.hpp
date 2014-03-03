@@ -70,49 +70,9 @@ using strategy::distance::services::return_type;
 
 
 
-// If reversal is needed, perform it
-template
-<
-    typename Geometry1, typename Geometry2, typename Strategy,
-    typename Tag1, typename Tag2, typename StrategyTag
->
-struct distance
-<
-    Geometry1, Geometry2, Strategy,
-    Tag1, Tag2, StrategyTag,
-    true
->
-    : distance<Geometry2, Geometry1, Strategy, Tag2, Tag1, StrategyTag, false>
-{
-    typedef typename strategy::distance::services::return_type
-                     <
-                         Strategy,
-                         typename point_type<Geometry2>::type,
-                         typename point_type<Geometry1>::type
-                     >::type return_type;
-
-    static inline return_type apply(
-        Geometry1 const& g1,
-        Geometry2 const& g2,
-        Strategy const& strategy)
-    {
-        return distance
-            <
-                Geometry2, Geometry1, Strategy,
-                Tag2, Tag1, StrategyTag,
-                false
-            >::apply(g2, g1, strategy);
-    }
-};
-
-
-
-
 //
 // dispatch for point-to-geometry combinations
 //
-
-
 
 
 // Point-point
@@ -121,7 +81,8 @@ struct distance
     <
         P1, P2, Strategy,
         point_tag, point_tag, strategy_tag_distance_point_point,
-        false
+        pointlike_tag, pointlike_tag, single_tag, single_tag,
+        false, false, false
     >
     : detail::distance::point_to_point<P1, P2, Strategy>
 {};
@@ -133,12 +94,14 @@ struct distance
     <
         P1, P2, Strategy,
         point_tag, point_tag, strategy_tag_distance_point_segment,
-        false
+        pointlike_tag, pointlike_tag, single_tag, single_tag,
+        false, false, false
     >
 {
     typedef typename return_type<Strategy, P1, P2>::type return_type;
 
-    static inline return_type apply(P1 const& p1, P2 const& p2, Strategy&)
+    static inline return_type apply(P1 const& p1, P2 const& p2,
+                                    Strategy const&)
     {
         typedef typename strategy::distance::services::strategy_point_point
             <
@@ -159,7 +122,8 @@ struct distance
 <
     Point, Linestring, Strategy,
     point_tag, linestring_tag, strategy_tag_distance_point_point,
-    false
+    pointlike_tag, linear_tag, single_tag, single_tag,
+    false, false, false
 >
 {
 
@@ -189,7 +153,8 @@ struct distance
 <
     Point, Linestring, Strategy,
     point_tag, linestring_tag, strategy_tag_distance_point_segment,
-    false
+    pointlike_tag, linear_tag, single_tag, single_tag,
+    false, false, false
 >
 {
     static inline typename return_type<Strategy, Point, typename point_type<Linestring>::type>::type
@@ -212,7 +177,8 @@ struct distance
 <
     Point, Polygon, Strategy,
     point_tag, polygon_tag, strategy_tag_distance_point_point,
-    false
+    pointlike_tag, areal_tag, single_tag, single_tag,
+    false, false, false
 >
 {
     typedef typename return_type<Strategy, Point, typename point_type<Polygon>::type>::type return_type;
@@ -247,7 +213,8 @@ struct distance
 <
     Point, Polygon, Strategy,
     point_tag, polygon_tag, strategy_tag_distance_point_segment,
-    false
+    pointlike_tag, areal_tag, single_tag, single_tag,
+    false, false, false
 >
 {
     typedef typename return_type<Strategy, Point, typename point_type<Polygon>::type>::type return_type;
@@ -274,55 +241,25 @@ struct distance
 };
 
 
-// point-multipoint
+// point-multigeometry
 template
 <
-    typename Point, typename MultiPoint, typename Strategy,
-    typename StrategyTag
+    typename Point, typename MultiGeometry, typename Strategy,
+    typename MultiGeometryTag, /*typename StrategyTag,*/
+    typename MultiTypeTag
 >
 struct distance
     <
-        Point, MultiPoint, Strategy,
-        point_tag, multi_point_tag, StrategyTag, false
+        Point, MultiGeometry, Strategy,
+        point_tag, MultiGeometryTag, strategy_tag_distance_point_segment,
+        pointlike_tag, MultiTypeTag, single_tag, multi_tag,
+        false, false, false
     > : detail::distance::distance_single_to_multi
         <
-            Point, MultiPoint, Strategy
+            Point, MultiGeometry, Strategy
         >
 {};
 
-
-// point-multilinestring
-template
-<
-    typename Point, typename MultiLinestring, typename Strategy,
-    typename StrategyTag
->
-struct distance
-    <
-        Point, MultiLinestring, Strategy,
-        point_tag, multi_linestring_tag, StrategyTag, false
-    > : detail::distance::distance_single_to_multi
-        <
-            Point, MultiLinestring, Strategy
-        >
-{};
-
-
-// point-multipolygon
-template
-<
-    typename Point, typename MultiPolygon, typename Strategy,
-    typename StrategyTag
->
-struct distance
-    <
-        Point, MultiPolygon, Strategy,
-        point_tag, multi_polygon_tag, StrategyTag, false
-    > : detail::distance::distance_single_to_multi
-        <
-            Point, MultiPolygon, Strategy
-        >
-{};
 
 
 // Point-segment version 1, with point-point strategy
@@ -331,7 +268,8 @@ struct distance
 <
     Point, Segment, Strategy,
     point_tag, segment_tag, strategy_tag_distance_point_point,
-    false
+    pointlike_tag, linear_tag, single_tag, single_tag,
+    false, true, false
 > : detail::distance::point_to_segment<Point, Segment, Strategy>
 {};
 
@@ -342,7 +280,8 @@ struct distance
 <
     Point, Segment, Strategy,
     point_tag, segment_tag, strategy_tag_distance_point_segment,
-    false
+    pointlike_tag, linear_tag, single_tag, single_tag,
+    false, true, false
 >
 {
     static inline typename return_type<Strategy, Point, typename point_type<Segment>::type>::type
@@ -365,7 +304,8 @@ struct distance
 <
     Point, Ring, Strategy,
     point_tag, ring_tag, strategy_tag_distance_point_point,
-    false
+    pointlike_tag, areal_tag, single_tag, single_tag,
+    false, false, false
 >
 {
     typedef typename return_type<Strategy, Point, typename point_type<Ring>::type>::type return_type;
@@ -399,7 +339,9 @@ template <typename Point, typename Box, typename Strategy>
 struct distance
     <
          Point, Box, Strategy, point_tag, box_tag,
-         strategy_tag_distance_point_point, false
+         strategy_tag_distance_point_point,
+         pointlike_tag, areal_tag, single_tag, single_tag,
+         false, true, false
     >
     : detail::distance::point_to_box<Point, Box, Strategy>
 {};
@@ -409,7 +351,9 @@ template <typename Point, typename Box, typename Strategy>
 struct distance
     <
          Point, Box, Strategy, point_tag, box_tag,
-         strategy_tag_distance_point_segment, false
+         strategy_tag_distance_point_segment,
+         pointlike_tag, areal_tag, single_tag, single_tag,
+         false, true, false
     >
 {
     typedef typename strategy::distance::services::strategy_point_point
@@ -436,142 +380,33 @@ struct distance
 
 
 //
-// dispatch for linestring-to-geometry distances
+// dispatch for linear-to-linear distances
 //
 
 
-
-
-// linestring-linestring
-template <typename Linestring1, typename Linestring2, typename Strategy>
+// linear-to-linear but not for segments
+template
+<
+    typename Linear1,
+    typename Linear2,
+    typename Strategy,
+    typename Tag1,
+    typename Tag2,
+    typename SingleMultiTag1,
+    typename SingleMultiTag2
+>
 struct distance
     <
-        Linestring1, Linestring2, Strategy, linestring_tag, linestring_tag,
-        strategy_tag_distance_point_segment, false
+         Linear1, Linear2, Strategy, Tag1, Tag2,
+         strategy_tag_distance_point_segment,
+         linear_tag, linear_tag, SingleMultiTag1, SingleMultiTag2,
+         false, false, false
     >
     : detail::distance::range_to_range
         <
-            Linestring1, Linestring2, Strategy, false, false
-        >
-{};
-
-template <typename Linestring1, typename Linestring2, typename Strategy>
-struct distance
-    <
-         Linestring1, Linestring2, Strategy, linestring_tag, linestring_tag,
-         strategy_tag_distance_point_point, false
-    >
-{
-    static inline typename return_type
-        <
-            Strategy,
-            typename point_type<Linestring1>::type,
-            typename point_type<Linestring2>::type
-        >::type
-    apply(Linestring1 const& linestring1, Linestring2 const& linestring2,
-          Strategy const&)
-    {
-        typedef typename detail::distance::default_ps_strategy
-            <
-                Linestring1, Linestring2, Strategy
-            >::type strategy_type;
-        return detail::distance::range_to_range
-            <
-                Linestring1, Linestring2, strategy_type, false, false
-            >::apply(linestring1, linestring2, strategy_type());
-    }
-};
-
-
-// linestring-polygon
-template <typename Linestring, typename Polygon, typename Strategy>
-struct distance
-    <
-        Linestring, Polygon, Strategy, linestring_tag, polygon_tag,
-        strategy_tag_distance_point_segment, false
-    >
-    : detail::distance::range_to_range
-        <
-          Linestring, Polygon, Strategy, false, true
-        >
-{};
-
-template<typename Linestring, typename Polygon, typename Strategy>
-struct distance
-    <
-         Linestring, Polygon, Strategy, linestring_tag, polygon_tag,
-         strategy_tag_distance_point_point, false
-    >
-{
-    static inline typename return_type
-        <
-            Strategy,
-            typename point_type<Linestring>::type,
-            typename point_type<Polygon>::type
-        >::type
-    apply(Linestring const& linestring, Polygon const& polygon, Strategy const&)
-    {
-        typedef typename detail::distance::default_ps_strategy
-            <
-                Linestring, Polygon, Strategy
-            >::type strategy_type;
-
-        return detail::distance::range_to_range
-            <
-                Linestring, Polygon, strategy_type, false, true
-            >::apply(linestring, polygon, strategy_type());
-    }
-};
-
-
-// linestring-multipoint
-template
-<
-    typename Linestring, typename MultiPoint, typename Strategy,
-    typename StrategyTag
->
-struct distance
-    <
-        Linestring, MultiPoint, Strategy,
-        linestring_tag, multi_point_tag, StrategyTag, false
-    > : detail::distance::multipoint_to_linear
-        <
-            MultiPoint, Linestring, Strategy
-        >
-{};
-
-
-// linestring-multilinestring
-template
-<
-    typename Linestring, typename MultiLinestring, typename Strategy,
-    typename StrategyTag
->
-struct distance
-    <
-        Linestring, MultiLinestring, Strategy,
-        linestring_tag, multi_linestring_tag, StrategyTag, false
-    > : detail::distance::range_to_range
-        <
-            Linestring, MultiLinestring, Strategy, false, true
-        >
-{};
-
-
-
-// linestring-multipolygon
-template
-<
-    typename Linestring, typename MultiPolygon, typename Strategy,
-    typename StrategyTag
->
-struct distance
-    <
-        Linestring, MultiPolygon, Strategy,
-        linestring_tag, multi_polygon_tag, StrategyTag, false
-    > : detail::distance::range_to_range
-        <
-            Linestring, MultiPolygon, Strategy, false, true
+            Linear1, Linear2, Strategy,
+            boost::is_same<SingleMultiTag1, multi_tag>::value,
+            boost::is_same<SingleMultiTag2, multi_tag>::value
         >
 {};
 
@@ -581,169 +416,92 @@ template <typename Linestring, typename Segment, typename Strategy>
 struct distance
     <
         Linestring, Segment, Strategy, linestring_tag, segment_tag,
-        strategy_tag_distance_point_segment, false
+        strategy_tag_distance_point_segment,
+        linear_tag, linear_tag, single_tag, single_tag,
+        false, true, false
     >
         : detail::distance::range_to_segment
             <
-                Linestring, Segment, closure<Linestring>::value, Strategy
+                Linestring, Segment, closed, Strategy
             >
 {};
 
 
-template <typename Linestring, typename Segment, typename Strategy>
+// segment-segment
+template <typename Segment1, typename Segment2, typename Strategy>
 struct distance
     <
-         Linestring, Segment, Strategy, linestring_tag, segment_tag,
-         strategy_tag_distance_point_point, false
+        Segment1, Segment2, Strategy, segment_tag, segment_tag,
+        strategy_tag_distance_point_segment,
+        linear_tag, linear_tag, single_tag, single_tag,
+        true, true, false
     >
-{
-    static inline typename return_type
-        <
-            Strategy,
-            typename point_type<Linestring>::type,
-            typename point_type<Segment>::type
-        >::type
-    apply(Linestring const& linestring, Segment const& segment, Strategy const&)
-    {
-        typedef typename detail::distance::default_ps_strategy
-            <
-                Linestring, Segment, Strategy
-            >::type strategy_type;
-
-        return detail::distance::range_to_segment
-            <
-                Linestring, Segment, closure<Linestring>::value, strategy_type
-            >::apply(linestring, segment, strategy_type());
-    }
-};
-
-
-// linestring-ring
-template <typename Linestring, typename Ring, typename Strategy>
-struct distance
-    <
-        Linestring, Ring, Strategy, linestring_tag, ring_tag,
-        strategy_tag_distance_point_segment, false
-    >
-    : detail::distance::range_to_range
-        <
-            Linestring, Ring, Strategy, false, false
-        >
+    : detail::distance::segment_to_segment<Segment1, Segment2, Strategy>
 {};
 
-template <typename Linestring, typename Ring, typename Strategy>
-struct distance
-    <
-         Linestring, Ring, Strategy, linestring_tag, ring_tag,
-         strategy_tag_distance_point_point, false
-    >
-{
-    static inline typename return_type
-        <
-            Strategy,
-            typename point_type<Linestring>::type,
-            typename point_type<Ring>::type
-        >::type
-    apply(Linestring const& linestring, Ring const& ring, Strategy const&)
-    {
-        typedef typename detail::distance::default_ps_strategy
-            <
-                Linestring, Ring, Strategy
-            >::type strategy_type;
-        return detail::distance::range_to_range
-            <
-                Linestring, Ring, strategy_type, false, false
-            >::apply(linestring, ring, strategy_type());
-    }
-};
 
-
-// MK::missing linestring-box
-
+// the multilinestring-segment combination has been implemented under:
+// multigeometry-segment
 
 
 
 //
-// dispatch for polygon-to-geometry distances
+// dispatch for linear-to-areal distances
 //
 
 
 
 
-// polygon-polygon
-template <typename Polygon1, typename Polygon2, typename Strategy>
+// linear-areal
+template
+<
+    typename Linear,
+    typename Areal,
+    typename Strategy,
+    typename Tag1,
+    typename Tag2,
+    typename SingleMultiTag1,
+    typename SingleMultiTag2
+>
 struct distance
     <
-        Polygon1, Polygon2, Strategy, polygon_tag, polygon_tag,
-        strategy_tag_distance_point_segment, false
+        Linear, Areal, Strategy, Tag1, Tag2,
+        strategy_tag_distance_point_segment,
+        linear_tag, areal_tag, SingleMultiTag1, SingleMultiTag2,
+        false, false, false
     >
     : detail::distance::range_to_range
         <
-            Polygon1, Polygon2, Strategy, true, true
+            Linear, Areal, Strategy,
+            boost::is_same<SingleMultiTag1, multi_tag>::value,
+            !boost::is_same<Tag2, ring_tag>::value
         >
 {};
 
-template <typename Polygon1, typename Polygon2, typename Strategy>
+
+// areal-linear
+template
+<
+    typename Linear,
+    typename Areal,
+    typename Strategy,
+    typename Tag1,
+    typename Tag2,
+    typename SingleMultiTag1,
+    typename SingleMultiTag2
+>
 struct distance
     <
-         Polygon1, Polygon2, Strategy, polygon_tag, polygon_tag,
-         strategy_tag_distance_point_point, false
+        Areal, Linear, Strategy, Tag1, Tag2,
+        strategy_tag_distance_point_segment,
+        areal_tag, linear_tag, SingleMultiTag1, SingleMultiTag2,
+        false, false, false
     >
-{
-    static inline typename return_type
+    : detail::distance::range_to_range
         <
-            Strategy,
-            typename point_type<Polygon1>::type,
-            typename point_type<Polygon2>::type
-        >::type
-    apply(Polygon1 const& polygon1, Polygon2 const& polygon2, Strategy const&)
-    {
-        typedef typename detail::distance::default_ps_strategy
-            <
-                Polygon1, Polygon2, Strategy
-            >::type strategy_type;
-
-        return detail::distance::range_to_range
-            <
-                Polygon1, Polygon2, strategy_type, true, true
-            >::apply(polygon1, polygon2, strategy_type());
-    }
-};
-
-
-// MK::missing polygon-multipoint
-
-
-// polygon-multilinestring
-template
-<
-    typename Polygon, typename MultiLinestring, typename Strategy,
-    typename StrategyTag
->
-struct distance
-    <
-        Polygon, MultiLinestring, Strategy,
-        polygon_tag, multi_linestring_tag, StrategyTag, false
-    > : detail::distance::range_to_range
-        <
-            Polygon, MultiLinestring, Strategy, true, true
-        >
-{};
-
-
-// polygon-multipolygon
-template
-<
-    typename Polygon, typename MultiPolygon, typename Strategy,
-    typename StrategyTag
->
-struct distance
-    <
-        Polygon, MultiPolygon, Strategy,
-        polygon_tag, multi_polygon_tag, StrategyTag, false
-    > : detail::distance::range_to_range
-        <
-            Polygon, MultiPolygon, Strategy, true, true
+            Areal, Linear, Strategy,
+            !boost::is_same<Tag1, ring_tag>::value,
+            boost::is_same<SingleMultiTag2, multi_tag>::value
         >
 {};
 
@@ -753,44 +511,58 @@ template <typename Polygon, typename Segment, typename Strategy>
 struct distance
     <
         Polygon, Segment, Strategy, polygon_tag, segment_tag,
-        strategy_tag_distance_point_segment, false
+        strategy_tag_distance_point_segment,
+        areal_tag, linear_tag, single_tag, single_tag,
+        false, true, false
     >    
     : detail::distance::polygon_to_segment<Polygon, Segment, Strategy>
 {};
 
 
-template<typename Polygon, typename Segment, typename Strategy>
+// the segment-box combination is implemented below
+// the multipolygon-segment combination is implemented as part of the
+// multigeometry-segment combination
+
+// MK::missing ring-segment, linestring-box
+
+
+
+
+//
+// dispatch for areal-to-areal distances
+//
+
+
+
+
+// areal-areal
+template
+<
+    typename Areal1,
+    typename Areal2,
+    typename Strategy,
+    typename Tag1,
+    typename Tag2,
+    typename SingleMultiTag1,
+    typename SingleMultiTag2
+>
 struct distance
     <
-         Polygon, Segment, Strategy, polygon_tag, segment_tag,
-         strategy_tag_distance_point_point, false
+        Areal1, Areal2, Strategy, Tag1, Tag2,
+        strategy_tag_distance_point_segment,
+        areal_tag, areal_tag, SingleMultiTag1, SingleMultiTag2,
+        false, false, false
     >
-{
-    static inline typename return_type
+    : detail::distance::range_to_range
         <
-            Strategy,
-            typename point_type<Polygon>::type,
-            typename point_type<Segment>::type
-        >::type
-    apply(Polygon const& polygon, Segment const& segment, Strategy const&)
-    {
-        typedef typename detail::distance::default_ps_strategy
-            <
-                Polygon, Segment, Strategy
-            >::type strategy_type;
-        return detail::distance::polygon_to_segment
-            <
-                Polygon, Segment, strategy_type
-            >::apply(polygon, segment, strategy_type());
-    }
-};
+            Areal1, Areal2, Strategy,
+            !boost::is_same<Tag1, ring_tag>::value,
+            !boost::is_same<Tag2, ring_tag>::value
+        >
+{};
 
 
-// MK::missing polygon-ring
-
-
-// MK::missing polygon-box
-
+// MK::missing geometry-box combinations
 
 
 
@@ -800,17 +572,15 @@ struct distance
 
 
 
-
 // multipoint-multipoint
-template
-<
-    typename MultiPoint1, typename MultiPoint2, typename Strategy,
-    typename StrategyTag
->
+template <typename MultiPoint1, typename MultiPoint2, typename Strategy>
 struct distance
     <
         MultiPoint1, MultiPoint2, Strategy,
-        multi_point_tag, multi_point_tag, StrategyTag, false
+        multi_point_tag, multi_point_tag,
+        strategy_tag_distance_point_point,
+        pointlike_tag, pointlike_tag, multi_tag, multi_tag,
+        false, false, false
     > : detail::distance::multipoint_to_multipoint
         <
             MultiPoint1, MultiPoint2, Strategy
@@ -818,187 +588,96 @@ struct distance
 {};
 
 
-// multipoint-multilinestring
+template <typename MultiPoint1, typename MultiPoint2, typename Strategy>
+struct distance
+    <
+        MultiPoint1, MultiPoint2, Strategy,
+        multi_point_tag, multi_point_tag,
+        strategy_tag_distance_point_segment,
+        pointlike_tag, pointlike_tag, multi_tag, multi_tag,
+        false, false, false
+    > : detail::distance::multipoint_to_multipoint
+        <
+            MultiPoint1, MultiPoint2, Strategy
+        >
+{};
+
+
+// multipoint-linear
 template
 <
-    typename MultiPoint, typename MultiLinestring, typename Strategy,
-    typename StrategyTag
+    typename MultiPoint,
+    typename Linear,
+    typename Strategy,
+    typename Tag,
+    typename SingleMultiTag
 >
 struct distance
     <
-        MultiPoint, MultiLinestring, Strategy,
-        multi_point_tag, multi_linestring_tag, StrategyTag, false
+        MultiPoint, Linear, Strategy, multi_point_tag, Tag,
+        strategy_tag_distance_point_segment,
+        pointlike_tag, linear_tag, multi_tag, SingleMultiTag,
+        false, false, false
     > : detail::distance::multipoint_to_linear
         <
-            MultiPoint, MultiLinestring, Strategy
+            MultiPoint, Linear, Strategy
         >
 {};
 
 
-// MK::missing multipoint-multipolygon
-
-
-// multipoint-segment
+// linear-multipoint
 template
 <
-    typename MultiPoint, typename Segment, typename Strategy,
-    typename StrategyTag
+    typename MultiPoint,
+    typename Linear,
+    typename Strategy,
+    typename Tag,
+    typename SingleMultiTag
 >
 struct distance
     <
-        MultiPoint, Segment, Strategy,
-        multi_point_tag, segment_tag, StrategyTag, false
-    > : detail::distance::distance_single_to_multi<Segment, MultiPoint, Strategy>
+        Linear, MultiPoint, Strategy, Tag, multi_point_tag,
+        strategy_tag_distance_point_segment,
+        linear_tag, pointlike_tag, SingleMultiTag, multi_tag,
+        false, false, false
+    > : detail::distance::multipoint_to_linear
+        <
+            MultiPoint, Linear, Strategy
+        >
 {};
-
-
-// MK::missing multipoint-ring
-
-
-// MK::missing multipoint-box
 
 
 
 
 //
-// dispatch for multilinestring-to-geometry distances
+// dispatch for multigeometry-segment
 //
 
 
 
 
-// multilinestring-multilinestring
+// multigeometry-segment
 template
 <
-    typename MultiLinestring1, typename MultiLinestring2, typename Strategy,
-    typename StrategyTag
+    typename MultiGeometry,
+    typename Segment,
+    typename Strategy,
+    typename Tag,
+    typename TypeTag
 >
 struct distance
     <
-        MultiLinestring1, MultiLinestring2, Strategy,
-        multi_linestring_tag, multi_linestring_tag, StrategyTag, false
-    > : detail::distance::range_to_range
-        <
-            MultiLinestring1, MultiLinestring2, Strategy, true, true
-        >
-{};
-
-
-// multilinestring-multipolygon
-template
-<
-    typename MultiLinestring, typename MultiPolygon, typename Strategy,
-    typename StrategyTag
->
-struct distance
-    <
-        MultiLinestring, MultiPolygon, Strategy,
-        multi_linestring_tag, multi_polygon_tag, StrategyTag, false
-    > : detail::distance::range_to_range
-        <
-            MultiLinestring, MultiPolygon, Strategy, true, true
-        >
-{};
-
-
-// multilinestring-segment
-template
-<
-    typename MultiLinestring, typename Segment, typename Strategy,
-    typename StrategyTag
->
-struct distance
-    <
-        MultiLinestring, Segment, Strategy,
-        multi_linestring_tag, segment_tag, StrategyTag, false
+        MultiGeometry, Segment, Strategy,
+        Tag, segment_tag, strategy_tag_distance_point_segment,
+        TypeTag, linear_tag, multi_tag, single_tag,
+        false, true, false
     > : detail::distance::distance_single_to_multi
         <
-            Segment, MultiLinestring, Strategy
+            Segment, MultiGeometry, Strategy
         >
 {};
 
-
-// multilinestring-ring
-template
-<
-    typename MultiLinestring, typename Ring, typename Strategy,
-    typename StrategyTag
->
-struct distance
-    <
-        MultiLinestring, Ring, Strategy,
-        multi_linestring_tag, ring_tag, StrategyTag, false
-    > : detail::distance::range_to_range
-        <
-            MultiLinestring, Ring, Strategy, true, false
-        >
-{};
-
-
-// MK::missing multilinestring-box
-
-
-
-
-//
-// dispatch for multipolygon-to-geometry distances
-//
-
-
-
-
-// multipolygon-multipolygon
-template
-<
-    typename MultiPolygon1, typename MultiPolygon2, typename Strategy,
-    typename StrategyTag
->
-struct distance
-    <
-        MultiPolygon1, MultiPolygon2, Strategy,
-        multi_polygon_tag, multi_polygon_tag, StrategyTag, false
-    > : detail::distance::range_to_range
-        <
-            MultiPolygon1, MultiPolygon2, Strategy, true, true
-        >
-{};
-
-
-// multipolygon-segment
-template
-<
-    typename MultiPolygon, typename Segment, typename Strategy,
-    typename StrategyTag
->
-struct distance
-    <
-        MultiPolygon, Segment, Strategy,
-        multi_polygon_tag, segment_tag, StrategyTag, false
-    > : detail::distance::distance_single_to_multi
-        <
-            Segment, MultiPolygon, Strategy
-        >
-{};
-
-
-// multipolygon-ring
-template
-<
-    typename MultiPolygon, typename Ring, typename Strategy,
-    typename StrategyTag
->
-struct distance
-    <
-        MultiPolygon, Ring, Strategy,
-        multi_polygon_tag, ring_tag, StrategyTag, false
-    > : detail::distance::range_to_range
-        <
-            MultiPolygon, Ring, Strategy, true, false
-        >
-{};
-
-
-// MK::missing multipolygon-box
+// MK::missing multipoint-areal
 
 
 
@@ -1008,52 +687,14 @@ struct distance
 //
 
 
-
-
-// segment-segment
-template <typename Segment1, typename Segment2, typename Strategy>
-struct distance
-    <
-         Segment1, Segment2, Strategy, segment_tag, segment_tag,
-         strategy_tag_distance_point_segment, false
-    >
-    : detail::distance::segment_to_segment<Segment1, Segment2, Strategy>
-{};
-
-
-template <typename Segment1, typename Segment2, typename Strategy>
-struct distance
-    <
-         Segment1, Segment2, Strategy, segment_tag, segment_tag,
-         strategy_tag_distance_point_point, false
-    >
-{
-    static inline typename return_type
-        <
-            Strategy,
-            typename point_type<Segment1>::type,
-            typename point_type<Segment2>::type
-        >::type
-    apply(Segment1 const& segment1, Segment2 const& segment2, Strategy const&)
-    {
-        typedef typename detail::distance::default_ps_strategy
-            <
-                Segment1, Segment2, Strategy
-            >::type strategy_type;
-        return detail::distance::segment_to_segment
-            <
-                Segment1, Segment2, strategy_type
-            >::apply(segment1, segment2, strategy_type());
-    }
-};
-
-
 // segment-ring
 template <typename Segment, typename Ring, typename Strategy>
 struct distance
     <
         Segment, Ring, Strategy, segment_tag, ring_tag,
-        strategy_tag_distance_point_segment, false
+        strategy_tag_distance_point_segment,
+        linear_tag, areal_tag, single_tag, single_tag,
+        true, false, false
     >
     : detail::distance::range_to_segment
         <
@@ -1062,73 +703,79 @@ struct distance
 {};
 
 
-template <typename Segment, typename Ring, typename Strategy>
-struct distance
-    <
-         Segment, Ring, Strategy, segment_tag, ring_tag,
-         strategy_tag_distance_point_point, false
-    >
-{
-    static inline typename return_type
-        <
-            Strategy,
-            typename point_type<Segment>::type,
-            typename point_type<Ring>::type
-        >::type
-    apply(Segment const& segment, Ring const& ring, Strategy const&)
-    {
-        typedef typename detail::distance::default_ps_strategy
-            <
-                Segment, Ring, Strategy
-            >::type strategy_type;
-        return detail::distance::range_to_segment
-            <
-                Ring, Segment, closure<Ring>::value, strategy_type
-            >::apply(ring, segment, strategy_type());
-    }
-};
-
-
-// segment-box (implemented only for 2D)
+// segment-box
 template <typename Segment, typename Box, typename Strategy>
 struct distance
     <
         Segment, Box, Strategy, segment_tag, box_tag,
-        strategy_tag_distance_point_point, false
-    >
-{
-    static inline typename return_type
-        <
-            Strategy,
-            typename point_type<Segment>::type,
-            typename point_type<Box>::type
-        >::type
-    apply(Segment const& segment, Box const& box, Strategy const&)
-    {
-        typedef typename detail::distance::default_ps_strategy
-            <
-                Segment, Box, Strategy
-            >::type strategy_type;
-
-        return detail::distance::segment_to_box
-            <
-                Segment, Box, strategy_type
-            >::apply(segment, box, strategy_type());
-    }
-};
-
-
-template <typename Segment, typename Box, typename Strategy>
-struct distance
-    <
-        Segment, Box, Strategy, segment_tag, box_tag,
-        strategy_tag_distance_point_segment, false
+        strategy_tag_distance_point_segment,
+        linear_tag, areal_tag, single_tag, single_tag,
+        true, true, false
     >
     : detail::distance::segment_to_box<Segment, Box, Strategy>
 {};
 
 
-// MK::missing: ring-ring, ring-box, box-box
+// MK::missing: ring-box, box-box
+
+
+
+
+//
+// dispatch for point-point strategy for linear and/or areal geometries
+//
+
+
+
+
+// geometry-geometry with PP strategy
+// in cases where the natural strategy is the PP strategy, there exist
+// specific specializations
+template
+<
+    typename Geometry1,
+    typename Geometry2,
+    typename Strategy,
+    typename Tag1,
+    typename Tag2,
+    typename TypeTag1,
+    typename TypeTag2,
+    typename SingleMultiTag1,
+    typename SingleMultiTag2,
+    bool SegmentOrBox1,
+    bool SegmentOrBox2
+>
+struct distance
+    <
+        Geometry1, Geometry2, Strategy, Tag1, Tag2,
+        strategy_tag_distance_point_point,
+        TypeTag1, TypeTag2, SingleMultiTag1, SingleMultiTag2,
+        SegmentOrBox1, SegmentOrBox2, false
+    >
+{
+    static inline typename return_type
+        <
+            Strategy,
+            typename point_type<Geometry1>::type,
+            typename point_type<Geometry2>::type
+        >::type apply(Geometry1 const& geometry1,
+                      Geometry2 const& geometry2,
+                      Strategy const&)
+    {
+        typedef typename detail::distance::default_ps_strategy
+            <
+                Geometry1, Geometry2, Strategy
+            >::type PS_Strategy;
+
+        return distance
+            <
+                Geometry1, Geometry2, PS_Strategy, Tag1, Tag2,
+                strategy_tag_distance_point_segment,
+                TypeTag1, TypeTag2, SingleMultiTag1, SingleMultiTag2,
+                SegmentOrBox1, SegmentOrBox2, false
+            >::apply(geometry1, geometry2, PS_Strategy());
+    }
+};
 
 
 

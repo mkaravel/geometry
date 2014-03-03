@@ -50,7 +50,6 @@ namespace dispatch
 using strategy::distance::services::return_type;
 
 
-#if 1
 template
 <
     typename Geometry1, typename Geometry2,
@@ -58,23 +57,88 @@ template
     typename Tag1 = typename tag<Geometry1>::type,
     typename Tag2 = typename tag<Geometry2>::type,
     typename StrategyTag = typename strategy::distance::services::tag<Strategy>::type,
+    typename TypeTag1 = typename tag_cast
+    <
+        typename tag<Geometry1>::type,
+        pointlike_tag,
+        linear_tag,
+        areal_tag
+    >::type,
+    typename TypeTag2 = typename tag_cast
+    <
+        typename tag<Geometry2>::type,
+        pointlike_tag,
+        linear_tag,
+        areal_tag
+    >::type,
+    typename SingleMultiTag1 = typename tag_cast
+    <
+        typename tag<Geometry1>::type,
+        single_tag,
+        multi_tag
+    >::type,
+    typename SingleMultiTag2 = typename tag_cast
+    <
+        typename tag<Geometry2>::type,
+        single_tag,
+        multi_tag
+    >::type,    
+    bool SegmentOrBox1 = boost::is_same<Tag1, segment_tag>::value
+    || boost::is_same<Tag1, box_tag>::value,
+    bool SegmentOrBox2 = boost::is_same<Tag2, segment_tag>::value
+    || boost::is_same<Tag2, box_tag>::value,
     bool Reverse = reverse_dispatch<Geometry1, Geometry2>::type::value
 >
 struct distance: not_implemented<Tag1, Tag2>
 {};
-#else
+
+
+
+// If reversal is needed, perform it
 template
 <
-    typename Geometry1, typename Geometry2,
-    typename Strategy = typename detail::distance::default_strategy<Geometry1, Geometry2>::type,
-    typename Tag1 = typename tag_cast<typename tag<Geometry1>::type, multi_tag>::type,
-    typename Tag2 = typename tag_cast<typename tag<Geometry2>::type, multi_tag>::type,
-    typename StrategyTag = typename strategy::distance::services::tag<Strategy>::type,
-    bool Reverse = reverse_dispatch<Geometry1, Geometry2>::type::value
+    typename Geometry1, typename Geometry2, typename Strategy,
+    typename Tag1, typename Tag2, typename StrategyTag,
+    typename TypeTag1, typename TypeTag2,
+    typename SingleMultiTag1, typename SingleMultiTag2,
+    bool SegmentOrBox1, bool SegmentOrBox2
 >
-struct distance: not_implemented<Tag1, Tag2>
-{};
-#endif
+struct distance
+<
+    Geometry1, Geometry2, Strategy,
+    Tag1, Tag2, StrategyTag,
+    TypeTag1, TypeTag2,
+    SingleMultiTag1, SingleMultiTag2,
+    SegmentOrBox1, SegmentOrBox2,
+    true
+>
+{
+    typedef typename strategy::distance::services::return_type
+                     <
+                         Strategy,
+                         typename point_type<Geometry2>::type,
+                         typename point_type<Geometry1>::type
+                     >::type return_type;
+
+    static inline return_type apply(Geometry1 const& g1,
+                                    Geometry2 const& g2,
+                                    Strategy const& strategy)
+    {
+        return distance
+            <
+                Geometry2, Geometry1, Strategy,
+                Tag2, Tag1, StrategyTag,
+                TypeTag2, TypeTag1,
+                SingleMultiTag2, SingleMultiTag1,
+                SegmentOrBox2, SegmentOrBox1,
+                false
+            >::apply(g2, g1, strategy);
+    }
+};
+
+
+
+
 
 
 } // namespace dispatch
