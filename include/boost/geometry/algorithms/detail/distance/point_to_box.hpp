@@ -12,7 +12,7 @@
 
 #include <boost/geometry/core/access.hpp>
 #include <boost/geometry/strategies/distance.hpp>
-
+#include <boost/geometry/util/calculation_type.hpp>
 
 namespace boost { namespace geometry
 {
@@ -87,28 +87,46 @@ struct closest_point_to_box
 
 
 template <typename Point, typename Box, typename Strategy>
-struct point_to_box
+class point_to_box
 {
-    typedef typename point_type<Box>::type BoxPoint;
+private:
+    typedef typename util::calculation_type::geometric::binary
+        <
+            Point,
+            typename point_type<Box>::type,
+            void
+        >::type ClosestPointCoordinateType;
 
+    typedef typename boost::mpl::if_
+        <
+            boost::is_same
+                <
+                    typename coordinate_type<Point>::type,
+                    ClosestPointCoordinateType
+                >,
+            Point,
+            typename point_type<Box>::type
+        >::type ClosestPoint;
+
+public:
     typedef typename strategy::distance::services::return_type
         <
-            Strategy, Point, BoxPoint
+            Strategy, Point, ClosestPoint
         >::type return_type;
 
     static inline return_type apply(Point const& point,
                                     Box const& box,
                                     Strategy const& strategy)
     {
-        BoxPoint cp;
+        ClosestPoint cp;
 
         closest_point_to_box
             <
                 Point,
                 Box,
-                BoxPoint,
+                ClosestPoint,
                 0,
-                dimension<Point>::type::value
+                dimension<Point>::value
             >::apply(point, box, cp);
 
         return strategy.apply(point, cp);

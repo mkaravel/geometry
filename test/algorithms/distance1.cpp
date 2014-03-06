@@ -40,7 +40,7 @@ typedef bg::strategy::distance::projected_point<> point_segment_strategy;
 //===========================================================================
 //===========================================================================
 
-template<typename Strategy>
+template <typename Strategy>
 void test_distance_segment_segment(Strategy const& strategy)
 {
 #ifdef GEOMETRY_TEST_DEBUG
@@ -70,7 +70,7 @@ void test_distance_segment_segment(Strategy const& strategy)
 //===========================================================================
 //===========================================================================
 
-template<typename Strategy>
+template <typename Strategy>
 void test_distance_segment_linestring(Strategy const& strategy)
 {
 #ifdef GEOMETRY_TEST_DEBUG
@@ -93,7 +93,7 @@ void test_distance_segment_linestring(Strategy const& strategy)
 //===========================================================================
 //===========================================================================
 
-template<typename Strategy>
+template <typename Strategy>
 void test_distance_linestring_linestring(Strategy const& strategy)
 {
 #ifdef GEOMETRY_TEST_DEBUG
@@ -134,7 +134,7 @@ void test_distance_linestring_linestring(Strategy const& strategy)
 //===========================================================================
 //===========================================================================
 
-template<typename Strategy>
+template <typename Strategy>
 void test_distance_segment_multilinestring(Strategy const& strategy)
 {
 #ifdef GEOMETRY_TEST_DEBUG
@@ -156,7 +156,7 @@ void test_distance_segment_multilinestring(Strategy const& strategy)
 //===========================================================================
 //===========================================================================
 
-template<typename Strategy>
+template <typename Strategy>
 void test_distance_linestring_multilinestring(Strategy const& strategy)
 {
 #ifdef GEOMETRY_TEST_DEBUG
@@ -180,7 +180,7 @@ void test_distance_linestring_multilinestring(Strategy const& strategy)
 //===========================================================================
 
 
-template<typename Strategy>
+template <typename Strategy>
 void test_distance_multilinestring_multilinestring(Strategy const& strategy)
 {
 #ifdef GEOMETRY_TEST_DEBUG
@@ -210,7 +210,7 @@ void test_distance_multilinestring_multilinestring(Strategy const& strategy)
 //===========================================================================
 //===========================================================================
 
-template<typename Strategy>
+template <typename Strategy>
 void test_distance_segment_polygon(Strategy const& strategy)
 {
 #ifdef GEOMETRY_TEST_DEBUG
@@ -240,7 +240,7 @@ void test_distance_segment_polygon(Strategy const& strategy)
 //===========================================================================
 //===========================================================================
 
-template<typename Strategy>
+template <typename Strategy>
 void test_distance_linestring_polygon(Strategy const& strategy)
 {
 #ifdef GEOMETRY_TEST_DEBUG
@@ -266,7 +266,7 @@ void test_distance_linestring_polygon(Strategy const& strategy)
 //===========================================================================
 //===========================================================================
 
-template<typename Strategy>
+template <typename Strategy>
 void test_distance_polygon_polygon(Strategy const& strategy)
 {
 #ifdef GEOMETRY_TEST_DEBUG
@@ -298,7 +298,7 @@ void test_distance_polygon_polygon(Strategy const& strategy)
 //===========================================================================
 
 
-template<typename Strategy>
+template <typename Strategy>
 void test_distance_point_multipolygon(Strategy const& strategy)
 {
 #ifdef GEOMETRY_TEST_DEBUG
@@ -334,7 +334,7 @@ void test_distance_point_multipolygon(Strategy const& strategy)
 //===========================================================================
 
 
-template<typename Strategy>
+template <typename Strategy>
 void test_distance_segment_multipolygon(Strategy const& strategy)
 {
 #ifdef GEOMETRY_TEST_DEBUG
@@ -370,7 +370,7 @@ void test_distance_segment_multipolygon(Strategy const& strategy)
 //===========================================================================
 
 
-template<typename Strategy>
+template <typename Strategy>
 void test_distance_linestring_multipolygon(Strategy const& strategy)
 {
 #ifdef GEOMETRY_TEST_DEBUG
@@ -406,7 +406,7 @@ void test_distance_linestring_multipolygon(Strategy const& strategy)
 //===========================================================================
 
 
-template<typename Strategy>
+template <typename Strategy>
 void test_distance_multilinestring_multipolygon(Strategy const& strategy)
 {
 #ifdef GEOMETRY_TEST_DEBUG
@@ -437,7 +437,7 @@ void test_distance_multilinestring_multipolygon(Strategy const& strategy)
 //===========================================================================
 
 
-template<typename Strategy>
+template <typename Strategy>
 void test_distance_polygon_multipolygon(Strategy const& strategy)
 {
 #ifdef GEOMETRY_TEST_DEBUG
@@ -462,7 +462,7 @@ void test_distance_polygon_multipolygon(Strategy const& strategy)
 //===========================================================================
 
 
-template<typename Strategy>
+template <typename Strategy>
 void test_distance_multipolygon_multipolygon(Strategy const& strategy)
 {
 #ifdef GEOMETRY_TEST_DEBUG
@@ -488,7 +488,7 @@ void test_distance_multipolygon_multipolygon(Strategy const& strategy)
 //===========================================================================
 
 
-template<typename Strategy>
+template <typename Strategy>
 void test_distance_point_multipoint(Strategy const& strategy)
 {
 #ifdef GEOMETRY_TEST_DEBUG
@@ -514,7 +514,7 @@ void test_distance_point_multipoint(Strategy const& strategy)
 //===========================================================================
 
 
-template<typename Strategy>
+template <typename Strategy>
 void test_distance_linestring_multipoint(Strategy const& strategy)
 {
 #ifdef GEOMETRY_TEST_DEBUG
@@ -543,7 +543,7 @@ void test_distance_linestring_multipoint(Strategy const& strategy)
 //===========================================================================
 
 
-template<typename Strategy>
+template <typename Strategy>
 void test_distance_multipoint_multipoint(Strategy const& strategy)
 {
 #ifdef GEOMETRY_TEST_DEBUG
@@ -566,7 +566,7 @@ void test_distance_multipoint_multipoint(Strategy const& strategy)
 //===========================================================================
 
 
-template<typename Strategy>
+template <typename Strategy>
 void test_distance_multipoint_multilinestring(Strategy const& strategy)
 {
 #ifdef GEOMETRY_TEST_DEBUG
@@ -595,7 +595,7 @@ void test_distance_multipoint_multilinestring(Strategy const& strategy)
 //===========================================================================
 
 
-template<typename Strategy>
+template <typename Strategy>
 void test_distance_multipoint_segment(Strategy const& strategy)
 {
 #ifdef GEOMETRY_TEST_DEBUG
@@ -624,7 +624,7 @@ void test_distance_multipoint_segment(Strategy const& strategy)
 //===========================================================================
 
 
-template<typename Strategy>
+template <typename Strategy>
 void test_distance_point_box_2d(Strategy const& strategy)
 {
 #ifdef GEOMETRY_TEST_DEBUG
@@ -683,8 +683,57 @@ void test_distance_point_box_2d(Strategy const& strategy)
 //===========================================================================
 //===========================================================================
 
+template <typename Strategy>
+void test_distance_point_box_different_point_types(Strategy const& strategy)
+{
+#ifdef GEOMETRY_TEST_DEBUG
+    std::cout << std::endl;
+    std::cout << "2D point/box distance tests with different points"
+              << std::endl;
+#endif
+    typedef point_type double_point;
+    typedef box_type double_box;
+    typedef bg::model::point<int,2,bg::cs::cartesian> int_point;
+    typedef bg::model::box<int_point> int_box;
 
-template<typename Strategy>
+    test_distance_of_geometries<int_point, int_box>()
+        ("point(0 0)",
+         make_box2d<int_box>(1, 1, 2, 2),
+         sqrt(2), 2, strategy);
+
+    test_distance_of_geometries<double_point, int_box>()
+        ("point(0.5 0)",
+         make_box2d<int_box>(1, -1, 2, 1),
+         0.5, 0.25, strategy);
+
+    test_distance_of_geometries<double_point, double_box>()
+        ("point(1.5 0)",
+         make_box2d<double_box>(1, -1, 2, 1),
+         0, 0, strategy);
+
+    test_distance_of_geometries<double_point, int_box>()
+        ("point(1.5 0)",
+         make_box2d<int_box>(1, -1, 2, 1),
+         0, 0, strategy);
+
+    test_distance_of_geometries<int_point, double_box>()
+        ("point(1 0)",
+         make_box2d<double_box>(0.5, -1, 1.5, 1),
+         0, 0, strategy);
+
+    test_distance_of_geometries<int_point, double_box>()
+        ("point(0 0)",
+         make_box2d<double_box>(0.5, -1, 1.5, 1),
+         0.5, 0.25, strategy);
+}
+
+
+//===========================================================================
+//===========================================================================
+//===========================================================================
+
+
+template <typename Strategy>
 void test_distance_segment_box(Strategy const& strategy)
 {
 #ifdef GEOMETRY_TEST_DEBUG
@@ -726,7 +775,7 @@ void test_distance_segment_box(Strategy const& strategy)
 //===========================================================================
 //===========================================================================
 
-template<typename Strategy>
+template <typename Strategy>
 void test_distance_point_box_3d(Strategy const& strategy)
 {
 #ifdef GEOMETRY_TEST_DEBUG
@@ -867,7 +916,7 @@ void test_distance_point_box_3d(Strategy const& strategy)
 
 
 
-template<typename Point, typename Strategy>
+template <typename Point, typename Strategy>
 void test_more_empty_input(Strategy const& strategy)
 {
 #ifdef GEOMETRY_TEST_DEBUG
@@ -1084,6 +1133,9 @@ BOOST_AUTO_TEST_CASE( test_all_point_box_2d )
 
     test_distance_point_box_2d(pp_strategy);
     test_distance_point_box_2d(ps_strategy);
+
+    test_distance_point_box_different_point_types(pp_strategy);
+    test_distance_point_box_different_point_types(ps_strategy);
 }
 
 BOOST_AUTO_TEST_CASE( test_all_point_box_3d )
