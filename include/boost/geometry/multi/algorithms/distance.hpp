@@ -22,4 +22,6 @@
 // this file is intentionally empty
 // it is used for backward compatinility and may be removed in the future
 
+#include <boost/geometry/algorithms/distance.hpp>
+
 #endif // BOOST_GEOMETRY_MULTI_ALGORITHMS_DISTANCE_HPP
