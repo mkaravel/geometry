@@ -10,6 +10,8 @@
 #ifndef BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_RANGE_TO_RANGE_HPP
 #define BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_RANGE_TO_RANGE_HPP
 
+#include <boost/geometry/algorithms/dispatch/distance.hpp>
+
 #include <boost/range.hpp>
 
 #include <boost/geometry/core/is_areal.hpp>
@@ -19,6 +21,7 @@
 #include <boost/geometry/strategies/distance_comparable_to_regular.hpp>
 
 #include <boost/geometry/algorithms/intersects.hpp>
+
 #include <boost/geometry/algorithms/detail/distance/closest_distance_rtree.hpp>
 
 
@@ -243,6 +246,92 @@ struct range_to_range
 
 }} // namespace detail::distance
 #endif // DOXYGEN_NO_DETAIL
+
+
+#ifndef DOXYGEN_NO_DISPATCH
+namespace dispatch
+{
+
+// linestring-linestring
+template <typename Linestring1, typename Linestring2, typename Strategy>
+struct distance
+    <
+        Linestring1, Linestring2, Strategy,
+        linestring_tag, linestring_tag, 
+        strategy_tag_distance_point_segment, false
+    >
+    : detail::distance::range_to_range
+        <
+            Linestring1, Linestring2, Strategy, false, false
+        >
+{};
+
+
+// linestring-polygon
+template <typename Linestring, typename Polygon, typename Strategy>
+struct distance
+    <
+        Linestring, Polygon, Strategy,
+        linestring_tag, polygon_tag, 
+        strategy_tag_distance_point_segment, false
+    >
+    : detail::distance::range_to_range
+        <
+            Linestring, Polygon, Strategy, false, true
+        >
+{};
+
+
+// linestring-ring
+template <typename Linestring, typename Ring, typename Strategy>
+struct distance
+    <
+        Linestring, Ring, Strategy,
+        linestring_tag, ring_tag, 
+        strategy_tag_distance_point_segment, false
+    >
+    : detail::distance::range_to_range
+        <
+            Linestring, Ring, Strategy, false, true
+        >
+{};
+
+
+// polygon-polygon
+template <typename Polygon1, typename Polygon2, typename Strategy>
+struct distance
+    <
+        Polygon1, Polygon2, Strategy,
+        polygon_tag, polygon_tag,
+        strategy_tag_distance_point_segment, false
+    >
+    : detail::distance::range_to_range
+        <
+            Polygon1, Polygon2, Strategy, true, true
+        >
+{};
+
+
+// polygon-ring
+template <typename Polygon, typename Ring, typename Strategy>
+struct distance
+    <
+        Polygon, Ring, Strategy,
+        polygon_tag, ring_tag,
+        strategy_tag_distance_point_segment, false
+    >
+    : detail::distance::range_to_range
+        <
+            Polygon, Ring, Strategy, true, true
+        >
+{};
+
+
+
+
+} // namespace dispatch
+#endif // DOXYGEN_NO_DISPATCH
+
 
 
 }} // namespace boost::geometry

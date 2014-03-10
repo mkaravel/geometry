@@ -10,9 +10,14 @@
 #ifndef BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_POINT_TO_BOX_HPP
 #define BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_POINT_TO_BOX_HPP
 
+#include <boost/geometry/algorithms/dispatch/distance.hpp>
+
 #include <boost/geometry/core/access.hpp>
 #include <boost/geometry/strategies/distance.hpp>
 #include <boost/geometry/util/calculation_type.hpp>
+
+#include <boost/geometry/algorithms/detail/distance/default_strategies.hpp>
+
 
 namespace boost { namespace geometry
 {
@@ -137,6 +142,53 @@ public:
 
 }} // namespace detail::distance
 #endif // DOXYGEN_NO_DETAIL
+
+
+#ifndef DOXYGEN_NO_DISPATCH
+namespace dispatch
+{
+
+// point-box
+template <typename Point, typename Box, typename Strategy>
+struct distance
+    <
+         Point, Box, Strategy, point_tag, box_tag,
+         strategy_tag_distance_point_point, false
+    >
+    : detail::distance::point_to_box<Point, Box, Strategy>
+{};
+
+
+template <typename Point, typename Box, typename Strategy>
+struct distance
+    <
+         Point, Box, Strategy, point_tag, box_tag,
+         strategy_tag_distance_point_segment, false
+    >
+{
+    typedef typename strategy::distance::services::strategy_point_point
+        <
+            Strategy
+        >::type pp_strategy_type;
+
+    static inline typename return_type
+        <
+            pp_strategy_type,
+            Point,
+            typename point_type<Box>::type
+        >::type
+    apply(Point const& point, Box const& box, Strategy const&)
+    {
+        return detail::distance::point_to_box
+            <
+                Point, Box, pp_strategy_type
+            >::apply(point, box, pp_strategy_type());
+    }
+};
+
+
+} // namespace dispatch
+#endif // DOXYGEN_NO_DISPATCH
 
 
 }} // namespace boost::geometry

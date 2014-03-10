@@ -10,15 +10,17 @@
 #ifndef BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_CLOSEST_DISTANCE_RTREE_HPP
 #define BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_CLOSEST_DISTANCE_RTREE_HPP
 
+#include <boost/geometry/algorithms/dispatch/distance.hpp>
+
 #include <boost/foreach.hpp>
 #include <boost/range.hpp>
 
-#include <boost/geometry/algorithms/distance.hpp>
 #include <boost/geometry/algorithms/intersects.hpp>
 #include <boost/geometry/algorithms/detail/distance/get_points.hpp>
 #include <boost/geometry/algorithms/detail/distance/split_to_segments.hpp>
 
 #include <boost/geometry/index/rtree.hpp>
+
 
 namespace boost { namespace geometry
 {
@@ -61,7 +63,16 @@ struct range_to_range_rtree
         RTreeValue t_v;
         std::size_t n = rt.query(index::nearest(q_v, 1), &t_v);
         assert( n > 0 );
-        return_type min_cd = geometry::distance(t_v, q_v, strategy);
+        return_type min_cd = dispatch::distance
+            <
+                RTreeValue,
+                QueryValue,
+                Strategy,
+                typename tag<RTreeValue>::type,
+                typename tag<QueryValue>::type,
+                typename strategy::distance::services::tag<Strategy>::type,
+                false
+            >::apply(t_v, q_v, strategy);
 
         ++it;
         for (; it != boost::end(q_range); ++it)
@@ -69,7 +80,16 @@ struct range_to_range_rtree
             q_v = *it;
             n = rt.query(index::nearest(q_v, 1), &t_v);
             assert( n > 0 );
-            return_type cd = geometry::distance(t_v, q_v, strategy);
+            return_type cd = dispatch::distance
+                <
+                    RTreeValue,
+                    QueryValue,
+                    Strategy,
+                    typename tag<RTreeValue>::type,
+                    typename tag<QueryValue>::type,
+                    typename strategy::distance::services::tag<Strategy>::type,
+                    false
+                >::apply(t_v, q_v, strategy);
 
             if ( cd < min_cd )
             {

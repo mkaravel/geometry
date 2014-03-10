@@ -22,9 +22,13 @@
 
 #include <boost/concept_check.hpp>
 #include <boost/mpl/if.hpp>
+#include <boost/range.hpp>
 #include <boost/typeof/typeof.hpp>
 
+#include <boost/numeric/conversion/bounds.hpp>
+
 #include <boost/geometry/core/cs.hpp>
+#include <boost/geometry/core/closure.hpp>
 #include <boost/geometry/core/reverse_dispatch.hpp>
 #include <boost/geometry/core/tag_cast.hpp>
 
@@ -35,8 +39,39 @@
 
 #include <boost/geometry/strategies/distance.hpp>
 #include <boost/geometry/strategies/default_distance_result.hpp>
+#include <boost/geometry/algorithms/assign.hpp>
+#include <boost/geometry/algorithms/within.hpp>
+#include <boost/geometry/algorithms/intersects.hpp>
+
+#include <boost/geometry/views/closeable_view.hpp>
+#include <boost/geometry/util/math.hpp>
 
 #include <boost/geometry/algorithms/detail/distance/default_strategies.hpp>
+#include <boost/geometry/algorithms/dispatch/distance.hpp>
+
+#include <boost/geometry/multi/core/tags.hpp>
+#include <boost/geometry/multi/core/geometry_id.hpp>
+#include <boost/geometry/multi/core/point_type.hpp>
+#include <boost/geometry/multi/geometries/concepts/check.hpp>
+
+#include <boost/geometry/multi/algorithms/num_points.hpp>
+#include <boost/geometry/util/select_coordinate_type.hpp>
+
+#include <boost/geometry/strategies/distance_comparable_to_regular.hpp>
+
+#if 0
+// the implementation details
+#include <boost/geometry/algorithms/detail/distance/point_to_geometry.hpp>
+#include <boost/geometry/algorithms/detail/distance/segment_to_segment.hpp>
+#include <boost/geometry/algorithms/detail/distance/range_to_range.hpp>
+#include <boost/geometry/algorithms/detail/distance/range_to_segment.hpp>
+#include <boost/geometry/algorithms/detail/distance/segment_to_box.hpp>
+#include <boost/geometry/algorithms/detail/distance/polygon_to_segment.hpp>
+#include <boost/geometry/algorithms/detail/distance/single_to_multi.hpp>
+#include <boost/geometry/algorithms/detail/distance/multi_to_multi.hpp>
+#include <boost/geometry/algorithms/detail/distance/multipoint_to_range.hpp>
+#endif
+
 
 namespace boost { namespace geometry
 {
@@ -47,71 +82,19 @@ namespace dispatch
 {
 
 
-using strategy::distance::services::return_type;
-
-
-template
-<
-    typename Geometry1, typename Geometry2,
-    typename Strategy = typename detail::distance::default_strategy<Geometry1, Geometry2>::type,
-    typename Tag1 = typename tag<Geometry1>::type,
-    typename Tag2 = typename tag<Geometry2>::type,
-    typename StrategyTag = typename strategy::distance::services::tag<Strategy>::type,
-    typename TypeTag1 = typename tag_cast
-    <
-        typename tag<Geometry1>::type,
-        pointlike_tag,
-        linear_tag,
-        areal_tag
-    >::type,
-    typename TypeTag2 = typename tag_cast
-    <
-        typename tag<Geometry2>::type,
-        pointlike_tag,
-        linear_tag,
-        areal_tag
-    >::type,
-    typename SingleMultiTag1 = typename tag_cast
-    <
-        typename tag<Geometry1>::type,
-        single_tag,
-        multi_tag
-    >::type,
-    typename SingleMultiTag2 = typename tag_cast
-    <
-        typename tag<Geometry2>::type,
-        single_tag,
-        multi_tag
-    >::type,    
-    bool SegmentOrBox1 = boost::is_same<Tag1, segment_tag>::value
-    || boost::is_same<Tag1, box_tag>::value,
-    bool SegmentOrBox2 = boost::is_same<Tag2, segment_tag>::value
-    || boost::is_same<Tag2, box_tag>::value,
-    bool Reverse = reverse_dispatch<Geometry1, Geometry2>::type::value
->
-struct distance: not_implemented<Tag1, Tag2>
-{};
-
-
-
 // If reversal is needed, perform it
 template
 <
     typename Geometry1, typename Geometry2, typename Strategy,
-    typename Tag1, typename Tag2, typename StrategyTag,
-    typename TypeTag1, typename TypeTag2,
-    typename SingleMultiTag1, typename SingleMultiTag2,
-    bool SegmentOrBox1, bool SegmentOrBox2
+    typename Tag1, typename Tag2, typename StrategyTag
 >
 struct distance
 <
     Geometry1, Geometry2, Strategy,
     Tag1, Tag2, StrategyTag,
-    TypeTag1, TypeTag2,
-    SingleMultiTag1, SingleMultiTag2,
-    SegmentOrBox1, SegmentOrBox2,
     true
 >
+    : distance<Geometry2, Geometry1, Strategy, Tag2, Tag1, StrategyTag, false>
 {
     typedef typename strategy::distance::services::return_type
                      <
@@ -120,17 +103,15 @@ struct distance
                          typename point_type<Geometry1>::type
                      >::type return_type;
 
-    static inline return_type apply(Geometry1 const& g1,
-                                    Geometry2 const& g2,
-                                    Strategy const& strategy)
+    static inline return_type apply(
+        Geometry1 const& g1,
+        Geometry2 const& g2,
+        Strategy const& strategy)
     {
         return distance
             <
                 Geometry2, Geometry1, Strategy,
                 Tag2, Tag1, StrategyTag,
-                TypeTag2, TypeTag1,
-                SingleMultiTag2, SingleMultiTag1,
-                SegmentOrBox2, SegmentOrBox1,
                 false
             >::apply(g2, g1, strategy);
     }
@@ -138,7 +119,44 @@ struct distance
 
 
 
+// geometry-geometry with PP strategy
+// in cases where the natural strategy is the PP strategy, there exist
+// specific specializations
+template
+<
+    typename Geometry1,
+    typename Geometry2,
+    typename Strategy,
+    typename Tag1,
+    typename Tag2
+>
+struct distance
+    <
+        Geometry1, Geometry2, Strategy, Tag1, Tag2,
+        strategy_tag_distance_point_point, false
+    >
+{
+    static inline typename strategy::distance::services::return_type
+        <
+            Strategy,
+            typename point_type<Geometry1>::type,
+            typename point_type<Geometry2>::type
+        >::type apply(Geometry1 const& geometry1,
+                      Geometry2 const& geometry2,
+                      Strategy const&)
+    {
+        typedef typename detail::distance::default_ps_strategy
+            <
+                Geometry1, Geometry2, Strategy
+            >::type PS_Strategy;
 
+        return distance
+            <
+                Geometry1, Geometry2, PS_Strategy, Tag1, Tag2,
+                strategy_tag_distance_point_segment, false
+            >::apply(geometry1, geometry2, PS_Strategy());
+    }
+};
 
 
 } // namespace dispatch
@@ -230,6 +248,18 @@ inline typename default_distance_result<Geometry1, Geometry2>::type distance(
 }
 
 }} // namespace boost::geometry
+
+
+// the implementation details
+#include <boost/geometry/algorithms/detail/distance/point_to_geometry.hpp>
+#include <boost/geometry/algorithms/detail/distance/segment_to_segment.hpp>
+#include <boost/geometry/algorithms/detail/distance/range_to_range.hpp>
+#include <boost/geometry/algorithms/detail/distance/range_to_segment.hpp>
+#include <boost/geometry/algorithms/detail/distance/segment_to_box.hpp>
+#include <boost/geometry/algorithms/detail/distance/polygon_to_segment.hpp>
+#include <boost/geometry/algorithms/detail/distance/single_to_multi.hpp>
+#include <boost/geometry/algorithms/detail/distance/multi_to_multi.hpp>
+#include <boost/geometry/algorithms/detail/distance/multipoint_to_range.hpp>
 
 
 #endif // BOOST_GEOMETRY_ALGORITHMS_DISTANCE_HPP

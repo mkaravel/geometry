@@ -10,12 +10,14 @@
 #ifndef BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_SEGMENT_TO_BOX_HPP
 #define BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_SEGMENT_TO_BOX_HPP
 
+#include <boost/geometry/algorithms/dispatch/distance.hpp>
+
 #include <boost/geometry/strategies/distance.hpp>
 #include <boost/geometry/strategies/distance_comparable_to_regular.hpp>
 
-#include <boost/geometry/algorithms/detail/distance/point_to_box.hpp>
 #include <boost/geometry/algorithms/intersects.hpp>
 #include <boost/geometry/algorithms/assign.hpp>
+#include <boost/geometry/algorithms/detail/distance/point_to_box.hpp>
 
 namespace boost { namespace geometry
 {
@@ -179,6 +181,25 @@ struct segment_to_box
 }} // namespace detail::distance
 #endif // DOXYGEN_NO_DETAIL
 
+
+#ifndef DOXYGEN_NO_DISPATCH
+namespace dispatch
+{
+
+// segment-box
+template <typename Segment, typename Box, typename Strategy>
+struct distance
+    <
+        Segment, Box, Strategy, segment_tag, box_tag,
+        strategy_tag_distance_point_segment, false
+    >
+    : detail::distance::segment_to_box<Segment, Box, Strategy>
+{};
+
+
+
+} // namespace dispatch
+#endif // DOXYGEN_NO_DISPATCH
 
 
 }} // namespace boost::geometry

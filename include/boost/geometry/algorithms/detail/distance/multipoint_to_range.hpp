@@ -22,11 +22,10 @@
 #include <boost/geometry/multi/algorithms/num_points.hpp>
 #include <boost/geometry/util/select_coordinate_type.hpp>
 
-#include <boost/geometry/algorithms/detail/distance/single_to_multi.hpp>
+#include <boost/geometry/algorithms/detail/distance/multi_to_multi.hpp>
 #include <boost/geometry/algorithms/detail/distance/range_to_range.hpp>
 #include <boost/geometry/algorithms/detail/distance/closest_distance_rtree.hpp>
 
-#include <boost/geometry/multi/multi.hpp>
 
 namespace boost { namespace geometry
 {
@@ -139,6 +138,51 @@ struct multipoint_to_linear
 
 }} // namespace detail::distance
 #endif // DOXYGEN_NO_DETAIL
+
+
+
+#ifndef DOXYGEN_NO_DISPATCH
+namespace dispatch
+{
+
+
+// specializations of distance_multi_to_multi for various geometry combinations
+
+
+// multipoint-multipoint
+template <typename MultiPoint1, typename MultiPoint2, typename Strategy>
+struct distance_multi_to_multi
+    <
+        MultiPoint1, MultiPoint2, Strategy,
+        multi_point_tag, multi_point_tag
+    > : detail::distance::multipoint_to_multipoint
+        <
+            MultiPoint1, MultiPoint2, Strategy
+        >
+{};
+
+
+// multipoint-multilinestring
+template
+<
+    typename MultiPoint,
+    typename MultiLinestring,
+    typename Strategy
+>
+struct distance_multi_to_multi
+    <
+        MultiPoint, MultiLinestring, Strategy,
+        multi_point_tag, multi_linestring_tag
+    > : detail::distance::multipoint_to_linear
+        <
+            MultiPoint, MultiLinestring, Strategy
+        >
+{};
+
+
+} // namespace dispatch
+#endif // DOXYGEN_NO_DISPATCH
+
 
 
 }} // namespace boost::geometry

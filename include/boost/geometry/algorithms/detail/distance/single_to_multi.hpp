@@ -19,6 +19,7 @@
 #ifndef BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_SINGLE_TO_MULTI_HPP
 #define BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_SINGLE_TO_MULTI_HPP
 
+#include <boost/geometry/algorithms/dispatch/distance.hpp>
 #include <boost/numeric/conversion/bounds.hpp>
 #include <boost/range.hpp>
 
@@ -27,14 +28,24 @@
 #include <boost/geometry/multi/core/point_type.hpp>
 #include <boost/geometry/multi/geometries/concepts/check.hpp>
 
-#include <boost/geometry/algorithms/distance.hpp>
 #include <boost/geometry/multi/algorithms/num_points.hpp>
 #include <boost/geometry/util/select_coordinate_type.hpp>
 
-#include <boost/geometry/algorithms/detail/distance/range_to_range.hpp>
-#include <boost/geometry/algorithms/detail/distance/closest_distance_rtree.hpp>
+// includes needed from multi.hpp -- start
+#include <boost/geometry/multi/algorithms/covered_by.hpp>
+#include <boost/geometry/multi/algorithms/disjoint.hpp>
+#include <boost/geometry/multi/algorithms/for_each.hpp>
+#include <boost/geometry/multi/algorithms/within.hpp>
 
-#include <boost/geometry/multi/multi.hpp>
+#include <boost/geometry/multi/algorithms/detail/for_each_range.hpp>
+#include <boost/geometry/multi/algorithms/detail/sections/range_by_section.hpp>
+#include <boost/geometry/multi/algorithms/detail/sections/sectionalize.hpp>
+
+#include <boost/geometry/multi/views/detail/range_type.hpp>
+// includes needed from multi.hpp -- end
+
+#include <boost/geometry/algorithms/detail/distance/range_to_range.hpp>
+
 
 namespace boost { namespace geometry
 {
@@ -44,15 +55,22 @@ namespace detail { namespace distance
 {
 
 
-// single-to-multi
-template<typename Geometry, typename MultiGeometry, typename Strategy>
-struct distance_single_to_multi
-    : private dispatch::distance
-      <
-          Geometry,
-          typename range_value<MultiGeometry>::type,
-          Strategy
-      >
+// generic single-to-multi
+template
+<
+    typename Geometry,
+    typename MultiGeometry,
+    typename Strategy,
+    typename GeometryTag,
+    typename MultiGeometryTag
+>
+struct distance_single_to_multi_generic
+//    : private dispatch::distance
+//      <
+//          Geometry,
+//          typename range_value<MultiGeometry>::type,
+//          Strategy
+//      >
 {
     typedef typename strategy::distance::services::comparable_type
         <
@@ -105,81 +123,213 @@ struct distance_single_to_multi
                 MultiGeometry
             >::apply(min_cdist);
     }
+};
 
+
+
+// generic multi-to-single
+template
+<
+    typename MultiGeometry,
+    typename Geometry,
+    typename Strategy,
+    typename MultiGeometryTag,
+    typename GeometryTag
+>
+struct distance_multi_to_single_generic
+{
+    typedef typename strategy::distance::services::return_type
+                     <
+                         Strategy,
+                         typename point_type<MultiGeometry>::type,
+                         typename point_type<Geometry>::type
+                     >::type return_type;
 
     static inline return_type apply(MultiGeometry const& multi,
                                     Geometry const& geometry,
                                     Strategy const& strategy)
     {
-        return apply(geometry, multi, strategy);
-    }
-};
-
-
-// multi-to-multi
-template<typename Multi1, typename Multi2, typename Strategy>
-struct distance_multi_to_multi
-    : private distance_single_to_multi
-      <
-          typename range_value<Multi1>::type,
-          Multi2,
-          Strategy
-      >
-{
-    typedef typename strategy::distance::services::comparable_type
-        <
-            Strategy
-        >::type ComparableStrategy;
-
-    typedef typename strategy::distance::services::get_comparable
-        <
-            Strategy
-        > GetComparable;
-
-    typedef typename strategy::distance::services::return_type
-                     <
-                         Strategy,
-                         typename point_type<Multi1>::type,
-                         typename point_type<Multi2>::type
-                     >::type return_type;
-
-    static inline return_type apply(Multi1 const& multi1,
-                Multi2 const& multi2, Strategy const& strategy)
-    {
-        return_type min_cdist = return_type();
-        bool first = true;
-
-        ComparableStrategy cstrategy = GetComparable::apply(strategy);
-
-        for(typename range_iterator<Multi1 const>::type it = boost::begin(multi1);
-                it != boost::end(multi1);
-                ++it, first = false)
-        {
-            return_type cdist = distance_single_to_multi
-                <
-                    typename range_value<Multi1>::type,
-                    Multi2,
-                    ComparableStrategy
-                >::apply(*it, multi2, cstrategy);
-            if (first || cdist < min_cdist)
-            {
-                min_cdist = cdist;
-            }
-        }
-
-        return strategy::distance::services::comparable_to_regular
+        return distance_single_to_multi_generic
             <
-                ComparableStrategy,
-                Strategy,
-                Multi1,
-                Multi2
-            >::apply(min_cdist);
+                Geometry, MultiGeometry, Strategy,
+                GeometryTag, MultiGeometryTag
+            >::apply(geometry, multi, strategy);
     }
 };
+
+
 
 
 }} // namespace detail::distance
 #endif // DOXYGEN_NO_DETAIL
+
+
+
+#ifndef DOXYGEN_NO_DISPATCH
+namespace dispatch
+{
+
+
+// default sub-dispatch for single-multi
+template
+<
+    typename Geometry,
+    typename MultiGeometry,
+    typename Strategy,
+    typename GeometryTag,
+    typename MultiGeometryTag
+>
+struct distance_single_to_multi
+    : detail::distance::distance_single_to_multi_generic
+        <
+            Geometry, MultiGeometry, Strategy,
+            GeometryTag, typename tag<MultiGeometry>::type
+        >
+{};
+
+
+// linestring-multilinestring
+template<typename Linestring, typename MultiLinestring, typename Strategy>
+struct distance_single_to_multi
+    <
+        Linestring, MultiLinestring, Strategy,
+        linestring_tag, multi_linestring_tag
+    > : detail::distance::range_to_range
+        <
+            Linestring, MultiLinestring, Strategy, false, true
+        >
+{};
+
+
+// linestring-multipolygon
+template <typename Linestring, typename MultiPolygon, typename Strategy>
+struct distance_single_to_multi
+    <
+        Linestring, MultiPolygon, Strategy,
+        linestring_tag, multi_polygon_tag
+    > : detail::distance::range_to_range
+        <
+            Linestring, MultiPolygon, Strategy, false, true
+        >
+{};
+
+
+// polygon-multilinestring
+template <typename Polygon, typename MultiLinestring, typename Strategy>
+struct distance_single_to_multi
+    <
+        Polygon, MultiLinestring, Strategy,
+        polygon_tag, multi_linestring_tag
+    > : detail::distance::range_to_range
+        <
+            Polygon, MultiLinestring, Strategy, true, false
+        >
+{};
+
+
+// polygon-multipolygon
+template <typename Polygon, typename MultiPolygon, typename Strategy>
+struct distance_single_to_multi
+    <
+        Polygon, MultiPolygon, Strategy,
+        polygon_tag, multi_polygon_tag
+    > : detail::distance::range_to_range
+        <
+            Polygon, MultiPolygon, Strategy, true, true
+        >
+{};
+
+
+
+// default sub-dispatch for multi-single
+template
+<
+    typename MultiGeometry,
+    typename Geometry,
+    typename Strategy,
+    typename MultiGeometryTag,
+    typename GeometryTag
+>
+struct distance_multi_to_single
+    : detail::distance::distance_multi_to_single_generic
+        <
+            MultiGeometry, Geometry, Strategy,
+            typename tag<MultiGeometry>::type, GeometryTag
+        >
+{};
+
+
+// multilinestring-ring
+template <typename MultiLinestring, typename Ring, typename Strategy>
+struct distance_single_to_multi
+    <
+        MultiLinestring, Ring, Strategy,
+        multi_linestring_tag, ring_tag
+    > : detail::distance::range_to_range
+        <
+            MultiLinestring, Ring, Strategy, false, true
+        >
+{};
+
+
+// multipolygon-ring
+template <typename MultiPolygon, typename Ring, typename Strategy>
+struct distance_single_to_multi
+    <
+        MultiPolygon, Ring, Strategy,
+        multi_polygon_tag, ring_tag
+    > : detail::distance::range_to_range
+        <
+            MultiPolygon, Ring, Strategy, true, true
+        >
+{};
+
+
+
+// dispatch for single-multi geometry combinations
+template
+<
+    typename Geometry,
+    typename MultiGeometry,
+    typename Strategy,
+    typename GeometryTag
+>
+struct distance
+    <
+        Geometry, MultiGeometry, Strategy, GeometryTag, multi_tag,
+        strategy_tag_distance_point_segment, false
+    > : distance_single_to_multi
+        <
+            Geometry, MultiGeometry, Strategy,
+            GeometryTag, typename tag<MultiGeometry>::type
+        >
+{};
+
+
+
+// generic dispatch for multi-single geometry combinations
+template
+<
+    typename MultiGeometry,
+    typename Geometry,
+    typename Strategy,
+    typename GeometryTag
+>
+struct distance
+    <
+        MultiGeometry, Geometry, Strategy, multi_tag, GeometryTag,
+        strategy_tag_distance_point_segment, false
+    > : distance_multi_to_single
+        <
+            MultiGeometry, Geometry, Strategy,
+            typename tag<MultiGeometry>::type, GeometryTag
+        >
+{};
+
+
+
+} // namespace dispatch
+#endif // DOXYGEN_NO_DISPATCH
 
 
 }} // namespace boost::geometry

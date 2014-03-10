@@ -10,14 +10,14 @@
 #ifndef BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_RANGE_TO_SEGMENT_HPP
 #define BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_RANGE_TO_SEGMENT_HPP
 
+#include <boost/geometry/algorithms/dispatch/distance.hpp>
+
 #include <boost/range.hpp>
 
 #include <boost/geometry/core/cs.hpp>
 #include <boost/geometry/core/closure.hpp>
 #include <boost/geometry/core/reverse_dispatch.hpp>
 #include <boost/geometry/core/tag_cast.hpp>
-
-#include <boost/geometry/geometries/segment.hpp>
 
 #include <boost/geometry/strategies/distance.hpp>
 #include <boost/geometry/strategies/distance_comparable_to_regular.hpp>
@@ -218,6 +218,45 @@ struct range_to_segment
 }} // namespace detail::distance
 #endif // DOXYGEN_NO_DETAIL
 
+
+
+#ifndef DOXYGEN_NO_DISPATCH
+namespace dispatch
+{
+
+
+// linestring-segment
+template <typename Linestring, typename Segment, typename Strategy>
+struct distance
+    <
+        Linestring, Segment, Strategy, linestring_tag, segment_tag,
+        strategy_tag_distance_point_segment, false
+    >
+        : detail::distance::range_to_segment
+            <
+                Linestring, Segment, closed, Strategy
+            >
+{};
+
+
+
+// segment-ring
+template <typename Segment, typename Ring, typename Strategy>
+struct distance
+    <
+        Segment, Ring, Strategy, segment_tag, ring_tag,
+        strategy_tag_distance_point_segment, false
+    >
+    : detail::distance::range_to_segment
+        <
+            Ring, Segment, closure<Ring>::value, Strategy
+        >
+{};
+
+
+
+} // namespace dispatch
+#endif // DOXYGEN_NO_DISPATCH
 
 
 

@@ -10,21 +10,7 @@
 #ifndef BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_POLYGON_TO_SEGMENT_HPP
 #define BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_POLYGON_TO_SEGMENT_HPP
 
-#include <boost/concept_check.hpp>
-#include <boost/mpl/if.hpp>
-#include <boost/range.hpp>
-#include <boost/typeof/typeof.hpp>
-
-#include <boost/geometry/core/cs.hpp>
 #include <boost/geometry/core/closure.hpp>
-#include <boost/geometry/core/reverse_dispatch.hpp>
-#include <boost/geometry/core/tag_cast.hpp>
-
-#include <boost/geometry/algorithms/not_implemented.hpp>
-#include <boost/geometry/algorithms/detail/throw_on_empty_input.hpp>
-
-#include <boost/geometry/geometries/segment.hpp>
-#include <boost/geometry/geometries/concepts/check.hpp>
 
 #include <boost/geometry/strategies/distance.hpp>
 #include <boost/geometry/strategies/default_distance_result.hpp>
@@ -161,6 +147,27 @@ struct polygon_to_segment
 }} // namespace detail::distance
 #endif // DOXYGEN_NO_DETAIL
 
+
+
+#ifndef DOXYGEN_NO_DETAIL
+namespace dispatch
+{
+
+
+// polygon-segment
+template <typename Polygon, typename Segment, typename Strategy>
+struct distance
+    <
+        Polygon, Segment, Strategy, polygon_tag, segment_tag,
+        strategy_tag_distance_point_segment, false
+    >    
+    : detail::distance::polygon_to_segment<Polygon, Segment, Strategy>
+{};
+
+
+
+} // namespace dispatch
+#endif // DOXYGEN_NO_DETAIL
 
 }} // namespace boost::geometry
 

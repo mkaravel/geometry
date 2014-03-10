@@ -20,8 +20,8 @@
 #ifndef BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_POINT_TO_GEOMETRY_HPP
 #define BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_POINT_TO_GEOMETRY_HPP
 
-#include <boost/concept_check.hpp>
-#include <boost/mpl/if.hpp>
+#include <boost/geometry/algorithms/dispatch/distance.hpp>
+
 #include <boost/range.hpp>
 #include <boost/typeof/typeof.hpp>
 
@@ -30,25 +30,19 @@
 #include <boost/geometry/core/reverse_dispatch.hpp>
 #include <boost/geometry/core/tag_cast.hpp>
 
-#include <boost/geometry/algorithms/not_implemented.hpp>
-#include <boost/geometry/algorithms/detail/throw_on_empty_input.hpp>
-
-#include <boost/geometry/geometries/segment.hpp>
 #include <boost/geometry/geometries/concepts/check.hpp>
 
 #include <boost/geometry/strategies/distance.hpp>
 #include <boost/geometry/strategies/default_distance_result.hpp>
+#include <boost/geometry/strategies/distance_comparable_to_regular.hpp>
+
 #include <boost/geometry/algorithms/assign.hpp>
 #include <boost/geometry/algorithms/within.hpp>
 #include <boost/geometry/algorithms/intersects.hpp>
 
 #include <boost/geometry/views/closeable_view.hpp>
-#include <boost/geometry/util/math.hpp>
 
 #include <boost/geometry/algorithms/detail/distance/default_strategies.hpp>
-#include <boost/geometry/algorithms/detail/distance/point_to_box.hpp>
-
-#include <boost/geometry/strategies/distance_comparable_to_regular.hpp>
 
 
 namespace boost { namespace geometry
@@ -101,88 +95,6 @@ struct point_to_segment
 };
 
 
-// compute segment-segment distance
-template<typename Segment1, typename Segment2, typename Strategy>
-struct segment_to_segment
-{
-    typedef typename return_type
-        <
-            Strategy,
-            typename point_type<Segment1>::type,
-            typename point_type<Segment2>::type
-        >::type return_type;
-
-    typedef typename strategy::distance::services::comparable_type
-        <
-            Strategy
-        >::type ComparableStrategy;
-
-    typedef typename strategy::distance::services::get_comparable
-        <
-            Strategy
-        > GetComparable;
-
-    static inline return_type
-    apply(Segment1 const& segment1, Segment2 const& segment2,
-          Strategy const& strategy)
-    {
-        if ( geometry::intersects(segment1, segment2) )
-        {
-            return 0;
-        }
-
-        typename point_type<Segment1>::type p[2];
-        detail::assign_point_from_index<0>(segment1, p[0]);
-        detail::assign_point_from_index<1>(segment1, p[1]);
-
-        typename point_type<Segment2>::type q[2];
-        detail::assign_point_from_index<0>(segment2, q[0]);
-        detail::assign_point_from_index<1>(segment2, q[1]);
-
-#ifdef BOOST_GEOMETRY_USE_COMPARABLE_DISTANCES
-        return_type d[4];
-        ComparableStrategy cstrategy = GetComparable::apply(strategy);
-        d[0] = cstrategy.apply(q[0], p[0], p[1]);
-        d[1] = cstrategy.apply(q[1], p[0], p[1]);
-        d[2] = cstrategy.apply(p[0], q[0], q[1]);
-        d[3] = cstrategy.apply(p[1], q[0], q[1]);
-
-        return_type dmin = d[0];
-        for (std::size_t i = 1; i < 4; ++i)
-        {
-            if ( d[i] < dmin )
-            {
-                dmin = d[i];
-            }
-        }
-
-        return strategy::distance::services::comparable_to_regular
-            <
-                ComparableStrategy,
-                Strategy,
-                typename point_type<Segment1>::type,
-                typename point_type<Segment2>::type
-            >::apply(dmin);
-#else
-        return_type d[4];
-        d[0] = strategy.apply(q[0], p[0], p[1]);
-        d[1] = strategy.apply(q[1], p[0], p[1]);
-        d[2] = strategy.apply(p[0], q[0], q[1]);
-        d[3] = strategy.apply(p[1], q[0], q[1]);
-
-        return_type dmin = d[0];
-        for (std::size_t i = 1; i < 4; ++i)
-        {
-            if ( d[i] < dmin )
-            {
-                dmin = d[i];
-            }
-        }
-
-        return dmin;
-#endif
-    }
-};
 
 
 template
@@ -399,6 +311,242 @@ struct point_to_polygon
 
 }} // namespace detail::distance
 #endif // DOXYGEN_NO_DETAIL
+
+
+
+
+#ifndef DOXYGEN_NO_DISPATCH
+namespace dispatch
+{
+
+// Point-point
+template <typename P1, typename P2, typename Strategy>
+struct distance
+    <
+        P1, P2, Strategy,
+        point_tag, point_tag, strategy_tag_distance_point_point,
+        false
+    >
+    : detail::distance::point_to_point<P1, P2, Strategy>
+{};
+
+
+// Point-point with the point-segment strategy passed
+template <typename P1, typename P2, typename Strategy>
+struct distance
+    <
+        P1, P2, Strategy, point_tag, point_tag, 
+        strategy_tag_distance_point_segment, false
+    >
+{
+    typedef typename return_type<Strategy, P1, P2>::type return_type;
+
+    static inline return_type apply(P1 const& p1, P2 const& p2,
+                                    Strategy const&)
+    {
+        typedef typename strategy::distance::services::strategy_point_point
+            <
+                Strategy
+            >::type pp_strategy;
+
+        return detail::distance::point_to_point
+            <
+                P1, P2, pp_strategy
+            >::apply(p1, p2, pp_strategy());
+    }
+};
+
+
+// Point-line version 1, where point-point strategy is specified
+template <typename Point, typename Linestring, typename Strategy>
+struct distance
+<
+    Point, Linestring, Strategy,
+    point_tag, linestring_tag, strategy_tag_distance_point_point,
+    false
+>
+{
+
+    static inline typename return_type<Strategy, Point, typename point_type<Linestring>::type>::type
+    apply(Point const& point,
+          Linestring const& linestring,
+          Strategy const& strategy)
+    {
+        typedef typename detail::distance::default_ps_strategy
+                    <
+                        Point,
+                        typename point_type<Linestring>::type,
+                        Strategy
+                    >::type ps_strategy_type;
+
+        return detail::distance::point_to_range
+            <
+                Point, Linestring, closed, Strategy, ps_strategy_type
+            >::apply(point, linestring, strategy, ps_strategy_type());
+    }
+};
+
+
+// Point-line version 2, where point-segment strategy is specified
+template <typename Point, typename Linestring, typename Strategy>
+struct distance
+<
+    Point, Linestring, Strategy,
+    point_tag, linestring_tag, strategy_tag_distance_point_segment,
+    false
+>
+{
+    static inline typename return_type<Strategy, Point, typename point_type<Linestring>::type>::type
+    apply(Point const& point,
+          Linestring const& linestring,
+          Strategy const& strategy)
+    {
+        typedef typename strategy::distance::services::strategy_point_point<Strategy>::type pp_strategy_type;
+        return detail::distance::point_to_range
+            <
+                Point, Linestring, closed, pp_strategy_type, Strategy
+            >::apply(point, linestring, pp_strategy_type(), strategy);
+    }
+};
+
+// Point-ring , where point-segment strategy is specified
+template <typename Point, typename Ring, typename Strategy>
+struct distance
+<
+    Point, Ring, Strategy,
+    point_tag, ring_tag, strategy_tag_distance_point_point,
+    false
+>
+{
+    typedef typename return_type<Strategy, Point, typename point_type<Ring>::type>::type return_type;
+
+    static inline return_type apply(Point const& point,
+            Ring const& ring,
+            Strategy const& strategy)
+    {
+        typedef typename detail::distance::default_ps_strategy
+            <
+                Point,
+                typename point_type<Ring>::type,
+                Strategy
+            >::type ps_strategy_type;
+
+        std::pair<return_type, bool>
+            dc = detail::distance::point_to_ring
+            <
+                Point, Ring,
+                geometry::closure<Ring>::value,
+                Strategy, ps_strategy_type
+            >::apply(point, ring, strategy, ps_strategy_type());
+
+        return dc.second ? return_type(0) : dc.first;
+    }
+};
+
+
+// Point-polygon , where point-segment strategy is specified
+template <typename Point, typename Polygon, typename Strategy>
+struct distance
+<
+    Point, Polygon, Strategy,
+    point_tag, polygon_tag, strategy_tag_distance_point_point,
+    false
+>
+{
+    typedef typename return_type<Strategy, Point, typename point_type<Polygon>::type>::type return_type;
+
+    static inline return_type apply(Point const& point,
+            Polygon const& polygon,
+            Strategy const& strategy)
+    {
+        typedef typename detail::distance::default_ps_strategy
+            <
+                Point,
+                typename point_type<Polygon>::type,
+                Strategy
+            >::type ps_strategy_type;
+
+        std::pair<return_type, bool>
+            dc = detail::distance::point_to_polygon
+            <
+                Point, Polygon,
+                geometry::closure<Polygon>::value,
+                Strategy, ps_strategy_type
+            >::apply(point, polygon, strategy, ps_strategy_type());
+
+        return dc.second ? return_type(0) : dc.first;
+    }
+};
+
+
+// Point-polygon , where point-segment strategy is specified
+template <typename Point, typename Polygon, typename Strategy>
+struct distance
+<
+    Point, Polygon, Strategy, point_tag, polygon_tag, 
+    strategy_tag_distance_point_segment, false
+>
+{
+    typedef typename return_type<Strategy, Point, typename point_type<Polygon>::type>::type return_type;
+
+    static inline return_type apply(Point const& point,
+            Polygon const& polygon,
+            Strategy const& strategy)
+    {
+        typedef typename strategy::distance::services::strategy_point_point
+            <
+                Strategy
+            >::type pp_strategy_type;
+
+        std::pair<return_type, bool>
+            dc = detail::distance::point_to_polygon
+            <
+                Point, Polygon,
+                geometry::closure<Polygon>::value,
+                pp_strategy_type, Strategy
+            >::apply(point, polygon, pp_strategy_type(), strategy);
+
+        return dc.second ? return_type(0) : dc.first;
+    }
+};
+
+
+// Point-segment version 1, with point-point strategy
+template <typename Point, typename Segment, typename Strategy>
+struct distance
+<
+    Point, Segment, Strategy,
+    point_tag, segment_tag, strategy_tag_distance_point_point,
+    false
+> : detail::distance::point_to_segment<Point, Segment, Strategy>
+{};
+
+// Point-segment version 2, with point-segment strategy
+template <typename Point, typename Segment, typename Strategy>
+struct distance
+<
+    Point, Segment, Strategy,
+    point_tag, segment_tag, strategy_tag_distance_point_segment,
+    false
+>
+{
+    static inline typename return_type<Strategy, Point, typename point_type<Segment>::type>::type
+    apply(Point const& point,
+          Segment const& segment,
+          Strategy const& strategy)
+    {
+
+        typename point_type<Segment>::type p[2];
+        geometry::detail::assign_point_from_index<0>(segment, p[0]);
+        geometry::detail::assign_point_from_index<1>(segment, p[1]);
+        return strategy.apply(point, p[0], p[1]);
+    }
+};
+
+
+
+} // namespace dispatch
+#endif // DOXYGEN_NO_DISPATCH
 
 
 }} // namespace boost::geometry
