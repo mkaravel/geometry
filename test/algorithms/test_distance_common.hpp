@@ -377,7 +377,19 @@ void test_empty_input(Geometry1 const& geometry1,
         return;
     }
     BOOST_CHECK_MESSAGE(false, "A empty_input_exception should have been thrown" );
+
+    try
+    {
+        bg::distance(geometry2, geometry1, strategy);
+    }
+    catch(bg::empty_input_exception const& )
+    {
+        return;
+    }
+    BOOST_CHECK_MESSAGE(false, "A empty_input_exception should have been thrown" );
 }
+
+
 
 //========================================================================
 //========================================================================
