@@ -8,8 +8,8 @@
 // Licensed under the Boost Software License version 1.0.
 // http://www.boost.org/users/license.html
 
-#ifndef BOOST_GEOMETRY_TEST_DISTANCE1_HPP
-#define BOOST_GEOMETRY_TEST_DISTANCE1_HPP
+#ifndef BOOST_GEOMETRY_TEST_DISTANCE_COMMON_HPP
+#define BOOST_GEOMETRY_TEST_DISTANCE_COMMON_HPP
 
 #include <boost/geometry/algorithms/distance.hpp>
 #include <boost/geometry/geometries/point.hpp>
@@ -384,4 +384,4 @@ void test_empty_input(Geometry1 const& geometry1,
 //========================================================================
 
 
-#endif // BOOST_GEOMETRY_TEST_DISTANCE1_HPP
+#endif // BOOST_GEOMETRY_TEST_DISTANCE_COMMON_HPP
