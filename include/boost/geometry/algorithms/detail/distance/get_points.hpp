@@ -77,6 +77,33 @@ struct get_points_segment
 };
 
 
+template <typename Box>
+struct get_points_box_2D
+{
+    template <typename OutputIterator>
+    static inline
+    OutputIterator apply(Box const& box, OutputIterator oit)
+    {
+        typename point_type<Box>::type top_left, bottom_right;
+
+        geometry::assign_values(top_left,
+                                geometry::get<0>(box.min_corner()),
+                                geometry::get<1>(box.max_corner()));
+
+        geometry::assign_values(bottom_right,
+                                geometry::get<0>(box.max_corner()),
+                                geometry::get<1>(box.min_corner()));
+
+        *oit++ = box.min_corner();
+        *oit++ = top_left;
+        *oit++ = box.max_corner();
+        *oit++ = bottom_right;
+        return oit;
+    }
+};
+
+
+
 template <typename Range>
 struct get_points_range
 {
@@ -144,6 +171,11 @@ struct get_points_dispatch<Point, point_tag>
 template <typename Segment>
 struct get_points_dispatch<Segment, segment_tag>
     : get_points_segment<Segment>
+{};
+
+template <typename Box>
+struct get_points_dispatch<Box, box_tag>
+    : get_points_box_2D<Box>
 {};
 
 template <typename LineString>
