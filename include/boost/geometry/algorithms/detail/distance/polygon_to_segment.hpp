@@ -44,7 +44,6 @@ struct polygon_to_segment
             typename point_type<Segment>::type
         >::type return_type;
 
-#ifdef BOOST_GEOMETRY_USE_COMPARABLE_DISTANCES
     typedef typename strategy::distance::services::comparable_type
        <
            Strategy
@@ -55,9 +54,9 @@ struct polygon_to_segment
            Strategy
        > GetComparable;
 
-    static inline return_type
-    apply(Polygon const& polygon, Segment const& segment,
-          Strategy const& strategy)
+    static inline return_type apply(Polygon const& polygon,
+                                    Segment const& segment,
+                                    Strategy const& strategy)
     {
         typedef typename geometry::ring_type<Polygon>::type e_ring;
         typedef typename geometry::interior_type<Polygon>::type i_rings;
@@ -101,46 +100,6 @@ struct polygon_to_segment
                 typename point_type<Segment>::type
             >::apply(dmin);
     }
-#else
-    static inline return_type
-    apply(Polygon const& polygon, Segment const& segment,
-          Strategy const& strategy)
-    {
-        typedef typename geometry::ring_type<Polygon>::type e_ring;
-        typedef typename geometry::interior_type<Polygon>::type i_rings;
-        typedef typename range_value<i_rings>::type i_ring;
-
-        if ( geometry::intersects(polygon, segment) )
-        {
-            return 0;
-        }
-
-        e_ring const& ext_ring = geometry::exterior_ring<Polygon>(polygon);
-        i_rings const& int_rings = geometry::interior_rings<Polygon>(polygon);
-
-        return_type dmin = range_to_segment
-            <
-                e_ring, Segment, closure<Polygon>::value, Strategy
-            >::apply(ext_ring, segment, strategy, false);
-
-        typedef typename boost::range_iterator<i_rings const>::type iterator_type;
-        for (iterator_type it = boost::begin(int_rings);
-             it != boost::end(int_rings); ++it)
-        {
-            return_type d = range_to_segment
-                <
-                    i_ring, Segment, closure<Polygon>::value, Strategy
-                >::apply(*it, segment, strategy, false);
-
-            if ( d < dmin )
-            {
-                dmin = d;
-            }
-        }
-
-        return dmin;
-    }
-#endif
 };
 
 
