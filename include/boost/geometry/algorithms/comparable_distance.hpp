@@ -41,12 +41,12 @@ comparable_distance(Geometry1 const& geometry1, Geometry2 const& geometry2,
     concept::check<Geometry1 const>();
     concept::check<Geometry2 const>();
 
-    typedef typename strategy::distance::services::comparable_type
-        <
-            Strategy
-        >::type strategy_type;
-
-    return distance(geometry1, geometry2, strategy_type());
+    return distance(geometry1, geometry2,
+                    strategy::distance::services::get_comparable
+                        <
+                            Strategy
+                        >::apply(strategy)
+                    );
 }
 
 
