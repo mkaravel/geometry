@@ -7,8 +7,8 @@
 // Licensed under the Boost Software License version 1.0.
 // http://www.boost.org/users/license.html
 
-#ifndef BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_POLYGON_TO_SEGMENT_HPP
-#define BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_POLYGON_TO_SEGMENT_HPP
+#ifndef BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_POLYGON_TO_SEGMENT_OR_BOX_HPP
+#define BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_POLYGON_TO_SEGMENT_OR_BOX_HPP
 
 #include <boost/geometry/core/closure.hpp>
 
@@ -22,7 +22,7 @@
 #include <boost/geometry/util/math.hpp>
 
 #include <boost/geometry/algorithms/detail/distance/point_to_geometry.hpp>
-#include <boost/geometry/algorithms/detail/distance/range_to_segment.hpp>
+#include <boost/geometry/algorithms/detail/distance/range_to_segment_or_box.hpp>
 
 
 namespace boost { namespace geometry
@@ -34,14 +34,14 @@ namespace detail { namespace distance
 
 
 // compute polygon-segment distance
-template <typename Polygon, typename Segment, typename Strategy>
-struct polygon_to_segment
+template <typename Polygon, typename SegmentOrBox, typename Strategy>
+struct polygon_to_segment_or_box
 {
     typedef typename return_type
         <
             Strategy,
             typename point_type<Polygon>::type,
-            typename point_type<Segment>::type
+            typename point_type<SegmentOrBox>::type
         >::type return_type;
 
     typedef typename strategy::distance::services::comparable_type
@@ -55,14 +55,14 @@ struct polygon_to_segment
        > GetComparable;
 
     static inline return_type apply(Polygon const& polygon,
-                                    Segment const& segment,
+                                    SegmentOrBox const& segment_or_box,
                                     Strategy const& strategy)
     {
         typedef typename geometry::ring_type<Polygon>::type e_ring;
         typedef typename geometry::interior_type<Polygon>::type i_rings;
         typedef typename range_value<i_rings>::type i_ring;
 
-        if ( geometry::intersects(polygon, segment) )
+        if ( geometry::intersects(polygon, segment_or_box) )
         {
             return 0;
         }
@@ -72,23 +72,25 @@ struct polygon_to_segment
 
         ComparableStrategy cstrategy = GetComparable::apply(strategy);
 
-        return_type dmin = range_to_segment
+        return_type cd_min = range_to_segment_or_box
             <
-                e_ring, Segment, closure<Polygon>::value, ComparableStrategy
-            >::apply(ext_ring, segment, cstrategy, false);
+                e_ring, SegmentOrBox,
+                closure<Polygon>::value, ComparableStrategy
+            >::apply(ext_ring, segment_or_box, cstrategy, false);
 
         typedef typename boost::range_iterator<i_rings const>::type iterator_type;
         for (iterator_type it = boost::begin(int_rings);
              it != boost::end(int_rings); ++it)
         {
-            return_type d = range_to_segment
+            return_type cd = range_to_segment_or_box
                 <
-                    i_ring, Segment, closure<Polygon>::value, ComparableStrategy
-                >::apply(*it, segment, cstrategy, false);
+                    i_ring, SegmentOrBox,
+                    closure<Polygon>::value, ComparableStrategy
+                >::apply(*it, segment_or_box, cstrategy, false);
 
-            if ( d < dmin )
+            if ( cd < cd_min )
             {
-                dmin = d;
+                cd_min = cd;
             }
         }
 
@@ -97,8 +99,8 @@ struct polygon_to_segment
                 ComparableStrategy,
                 Strategy,
                 typename point_type<Polygon>::type,
-                typename point_type<Segment>::type
-            >::apply(dmin);
+                typename point_type<SegmentOrBox>::type
+            >::apply(cd_min);
     }
 };
 
@@ -120,7 +122,18 @@ struct distance
         Polygon, Segment, Strategy, polygon_tag, segment_tag,
         strategy_tag_distance_point_segment, false
     >    
-    : detail::distance::polygon_to_segment<Polygon, Segment, Strategy>
+    : detail::distance::polygon_to_segment_or_box<Polygon, Segment, Strategy>
+{};
+
+
+// polygon-box
+template <typename Polygon, typename Box, typename Strategy>
+struct distance
+    <
+        Polygon, Box, Strategy, polygon_tag, box_tag,
+        strategy_tag_distance_point_segment, false
+    >    
+    : detail::distance::polygon_to_segment_or_box<Polygon, Box, Strategy>
 {};
 
 
@@ -131,4 +144,4 @@ struct distance
 }} // namespace boost::geometry
 
 
-#endif // BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_POLYGON_TO_SEGMENT_HPP
+#endif // BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_POLYGON_TO_SEGMENT_OR_BOX_HPP

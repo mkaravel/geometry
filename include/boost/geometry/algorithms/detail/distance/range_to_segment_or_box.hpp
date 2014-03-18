@@ -7,8 +7,8 @@
 // Licensed under the Boost Software License version 1.0.
 // http://www.boost.org/users/license.html
 
-#ifndef BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_RANGE_TO_SEGMENT_HPP
-#define BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_RANGE_TO_SEGMENT_HPP
+#ifndef BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_RANGE_TO_SEGMENT_OR_BOX_HPP
+#define BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_RANGE_TO_SEGMENT_OR_BOX_HPP
 
 #include <boost/geometry/algorithms/dispatch/distance.hpp>
 
@@ -22,8 +22,8 @@
 #include <boost/geometry/strategies/distance.hpp>
 #include <boost/geometry/strategies/distance_comparable_to_regular.hpp>
 
-#include <boost/geometry/algorithms/assign.hpp>
 #include <boost/geometry/algorithms/intersects.hpp>
+#include <boost/geometry/algorithms/detail/distance/get_points.hpp>
 
 #include <boost/geometry/views/closeable_view.hpp>
 
@@ -36,24 +36,20 @@ namespace detail { namespace distance
 {
 
 
-// compute range-segment distance
+// compute range-segment or box distance
 template
 <
     typename Range,
-    typename Segment,
+    typename SegmentOrBox,
     closure_selector Closure,
     typename Strategy
 >
-struct range_to_segment
+class range_to_segment_or_box
 {
-    typedef typename strategy::distance::services::return_type
-        <
-            Strategy,
-            typename point_type<Range>::type,
-            typename point_type<Segment>::type
-        >::type return_type;
+private:
+    typedef typename point_type<SegmentOrBox>::type SegmentOrBoxPoint;
+    typedef typename point_type<Range>::type RangePoint;
 
-#ifdef BOOST_GEOMETRY_USE_COMPARABLE_DISTANCES
     typedef typename strategy::distance::services::comparable_type
         <
             Strategy
@@ -64,153 +60,89 @@ struct range_to_segment
             Strategy
         > GetComparable;
 
+    typedef typename strategy::distance::services::tag
+       <
+           ComparableStrategy
+       >::type ComparableStrategyTag;
+
+    typedef dispatch::distance
+        <
+            SegmentOrBoxPoint, Range, ComparableStrategy,
+            point_tag, typename tag<Range>::type,
+            ComparableStrategyTag, false
+        > point_to_range;
+
+    typedef dispatch::distance
+        <
+            RangePoint, SegmentOrBox, ComparableStrategy,
+            point_tag, typename tag<SegmentOrBox>::type,
+            ComparableStrategyTag, false
+        > point_to_segment_or_box;
+
+public:
+    typedef typename strategy::distance::services::return_type
+        <
+            Strategy, RangePoint, SegmentOrBoxPoint
+        >::type return_type;
+
     static inline return_type
-    apply(Range const& range, Segment const& segment,
+    apply(Range const& range, SegmentOrBox const& segment_or_box,
           Strategy const& strategy, bool check_intersection = true)
     {
-        typedef typename strategy::distance::services::strategy_point_point
-            <
-                ComparableStrategy
-            >::type pp_strategy_type;
-
-        typedef point_to_range
-            <
-                typename point_type<Segment>::type,
-                Range,
-                Closure,
-                pp_strategy_type,
-                ComparableStrategy
-            > segment_point_to_range;
-
-        if ( check_intersection && geometry::intersects(range, segment) )
+        if ( check_intersection && geometry::intersects(range, segment_or_box) )
         {
             return 0;
         }
 
-        // consider all distances from each endpoint of the segment
-        // to the range, and then all distances of the points in the
-        // range to the segment
-
-        
-        // initialize distance with one endpoint from the segment to
-        // the range
-        typename point_type<Segment>::type p[2];
-        detail::assign_point_from_index<0>(segment, p[0]);
-        detail::assign_point_from_index<1>(segment, p[1]);
-
-        pp_strategy_type pp_strategy;
         ComparableStrategy cstrategy = GetComparable::apply(strategy);
 
-        return_type dmin = segment_point_to_range::apply(p[0],
-                                                         range,
-                                                         pp_strategy,
-                                                         cstrategy);
+        // get all points of the segment or the box
+        std::vector<SegmentOrBoxPoint> segment_or_box_points;
+        get_points
+            <
+                SegmentOrBox
+            >::apply(segment_or_box, std::back_inserter(segment_or_box_points));
 
-        return_type d = segment_point_to_range::apply(p[1],
-                                                      range,
-                                                      pp_strategy,
-                                                      cstrategy);
+        // consider all distances from each endpoint of the segment or box
+        // to the range
+        BOOST_AUTO_TPL(it, segment_or_box_points.begin());
+        return_type cd_min = point_to_range::apply(*it, range, cstrategy);
 
-        if ( d < dmin )
+        for (++it; it != segment_or_box_points.end(); ++it)
         {
-            dmin = d;
+            return_type cd = point_to_range::apply(*it, range, cstrategy);
+            if ( cd < cd_min )
+            {
+                cd_min = cd;
+            }
         }
 
-        // check the distances from the points in the range to the segment
+        // consider all distances of the points in the range to the
+        // segment or box
         typedef typename range_iterator<Range const>::type iterator_type;
         for (iterator_type it = boost::begin(range); it != boost::end(range); ++it)
         {
-            d = cstrategy.apply(*it, p[0], p[1]);
+            return_type cd =
+                point_to_segment_or_box::apply(*it, segment_or_box, cstrategy);
 
-            if ( d < dmin )
+            if ( cd < cd_min )
             {
-                dmin = d;
+                cd_min = cd;
             }
         }
 
         return strategy::distance::services::comparable_to_regular
             <
-                ComparableStrategy,
-                Strategy,
-                typename point_type<Range>::type,
-                typename point_type<Segment>::type
-            >::apply(dmin);
+                ComparableStrategy, Strategy,
+                RangePoint, SegmentOrBoxPoint
+            >::apply(cd_min);
     }
-#else
-    static inline return_type
-    apply(Range const& range, Segment const& segment,
-          Strategy const& strategy, bool check_intersection = true)
-    {
-        typedef typename strategy::distance::services::strategy_point_point
-            <
-                Strategy
-            >::type pp_strategy_type;
-
-        typedef point_to_range
-            <
-                typename point_type<Segment>::type,
-                Range,
-                Closure,
-                pp_strategy_type,
-                Strategy
-            > segment_point_to_range;
-
-        if ( check_intersection &&
-             geometry::intersects(range, segment) )
-        {
-            return 0;
-        }
-
-        // consider all distances from each endpoint of the segment
-        // to the range, and then all distances of the points in the
-        // range to the segment
-
-        
-        // initialize distance with one endpoint from the segment to
-        // the range
-        typename point_type<Segment>::type p[2];
-        detail::assign_point_from_index<0>(segment, p[0]);
-        detail::assign_point_from_index<1>(segment, p[1]);
-
-        pp_strategy_type pp_strategy;
-
-        return_type dmin = segment_point_to_range::apply(p[0],
-                                                         range,
-                                                         pp_strategy,
-                                                         strategy);
-
-        return_type d = segment_point_to_range::apply(p[1],
-                                                      range,
-                                                      pp_strategy,
-                                                      strategy);
-
-        if ( d < dmin )
-        {
-            dmin = d;
-        }
-
-        // check the distances from the points in the range to the segment
-        typedef typename range_iterator<Range const>::type iterator_type;
-        for (iterator_type it = boost::begin(range); it != boost::end(range); ++it)
-        {
-            d = strategy.apply(*it, p[0], p[1]);
-
-            if ( d < dmin )
-            {
-                dmin = d;
-            }
-        }
-
-        return dmin;
-    }
-#endif
-
 
     static inline return_type
-    apply(Segment const& segment, Range const& range, 
+    apply(SegmentOrBox const& segment_or_box, Range const& range, 
           Strategy const& strategy, bool check_intersection = true)
     {
-        return apply(range, segment, strategy, check_intersection);
+        return apply(range, segment_or_box, strategy, check_intersection);
     }
 };
 
@@ -232,7 +164,7 @@ struct distance
         Linestring, Segment, Strategy, linestring_tag, segment_tag,
         strategy_tag_distance_point_segment, false
     >
-        : detail::distance::range_to_segment
+        : detail::distance::range_to_segment_or_box
             <
                 Linestring, Segment, closed, Strategy
             >
@@ -247,11 +179,42 @@ struct distance
         Segment, Ring, Strategy, segment_tag, ring_tag,
         strategy_tag_distance_point_segment, false
     >
-    : detail::distance::range_to_segment
+    : detail::distance::range_to_segment_or_box
         <
             Ring, Segment, closure<Ring>::value, Strategy
         >
 {};
+
+
+
+// linestring-box
+template <typename Linestring, typename Box, typename Strategy>
+struct distance
+    <
+        Linestring, Box, Strategy, linestring_tag, box_tag,
+        strategy_tag_distance_point_segment, false
+    >
+        : detail::distance::range_to_segment_or_box
+            <
+                Linestring, Box, closed, Strategy
+            >
+{};
+
+
+
+// ring-box
+template <typename Ring, typename Box, typename Strategy>
+struct distance
+    <
+        Ring, Box, Strategy, ring_tag, box_tag,
+        strategy_tag_distance_point_segment, false
+    >
+    : detail::distance::range_to_segment_or_box
+        <
+            Ring, Box, closure<Ring>::value, Strategy
+        >
+{};
+
 
 
 
@@ -263,4 +226,4 @@ struct distance
 }} // namespace boost::geometry
 
 
-#endif // BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_RANGE_TO_SEGMENT_HPP
+#endif // BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_RANGE_TO_SEGMENT_OR_BOX_HPP
