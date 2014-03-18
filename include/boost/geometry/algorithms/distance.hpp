@@ -67,6 +67,8 @@
 #include <boost/geometry/algorithms/detail/distance/range_to_segment.hpp>
 #include <boost/geometry/algorithms/detail/distance/segment_to_box.hpp>
 #include <boost/geometry/algorithms/detail/distance/polygon_to_segment.hpp>
+#include <boost/geometry/algorithms/detail/distance/polygon_to_box.hpp>
+#include <boost/geometry/algorithms/detail/distance/box_to_box.hpp>
 #include <boost/geometry/algorithms/detail/distance/single_to_multi.hpp>
 #include <boost/geometry/algorithms/detail/distance/multi_to_multi.hpp>
 #include <boost/geometry/algorithms/detail/distance/multipoint_to_range.hpp>
@@ -257,6 +259,8 @@ inline typename default_distance_result<Geometry1, Geometry2>::type distance(
 #include <boost/geometry/algorithms/detail/distance/range_to_segment.hpp>
 #include <boost/geometry/algorithms/detail/distance/segment_to_box.hpp>
 #include <boost/geometry/algorithms/detail/distance/polygon_to_segment.hpp>
+#include <boost/geometry/algorithms/detail/distance/polygon_to_box.hpp>
+#include <boost/geometry/algorithms/detail/distance/box_to_box.hpp>
 #include <boost/geometry/algorithms/detail/distance/single_to_multi.hpp>
 #include <boost/geometry/algorithms/detail/distance/multi_to_multi.hpp>
 #include <boost/geometry/algorithms/detail/distance/multipoint_to_range.hpp>
