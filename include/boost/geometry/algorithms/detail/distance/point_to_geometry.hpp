@@ -409,7 +409,7 @@ struct distance
     }
 };
 
-// Point-ring , where point-segment strategy is specified
+// Point-ring , where point-point strategy is specified
 template <typename Point, typename Ring, typename Strategy>
 struct distance
 <
@@ -443,8 +443,40 @@ struct distance
     }
 };
 
+// Point-ring , where point-segment strategy is specified
+template <typename Point, typename Ring, typename Strategy>
+struct distance
+<
+    Point, Ring, Strategy,
+    point_tag, ring_tag, strategy_tag_distance_point_segment,
+    false
+>
+{
+    typedef typename return_type<Strategy, Point, typename point_type<Ring>::type>::type return_type;
 
-// Point-polygon , where point-segment strategy is specified
+    static inline return_type apply(Point const& point,
+            Ring const& ring,
+            Strategy const& strategy)
+    {
+        typedef typename strategy::distance::services::strategy_point_point
+            <
+                Strategy
+            >::type pp_strategy_type;
+
+        std::pair<return_type, bool>
+            dc = detail::distance::point_to_ring
+            <
+                Point, Ring,
+                geometry::closure<Ring>::value,
+                pp_strategy_type, Strategy
+            >::apply(point, ring, pp_strategy_type(), strategy);
+
+        return dc.second ? return_type(0) : dc.first;
+    }
+};
+
+
+// Point-polygon , where point-point strategy is specified
 template <typename Point, typename Polygon, typename Strategy>
 struct distance
 <
