@@ -50,32 +50,21 @@ private:
             Strategy
         > GetComparable;
 
+    typedef typename strategy::distance::services::tag
+        <
+            ComparableStrategy
+        >::type ComparableStrategyTag;
+
     typedef dispatch::distance
         <
-            BoxPoint1,
-            Box2,
-            ComparableStrategy,
-            point_tag,
-            box_tag,
-            typename strategy::distance::services::tag
-            <
-                ComparableStrategy
-            >::type,
-            false
+            BoxPoint1, Box2, ComparableStrategy,
+            point_tag, box_tag, ComparableStrategyTag, false
         > PointToBox12;
 
     typedef dispatch::distance
         <
-            BoxPoint2,
-            Box1,
-            ComparableStrategy,
-            point_tag,
-            box_tag,
-            typename strategy::distance::services::tag
-            <
-                ComparableStrategy
-            >::type,
-            false
+            BoxPoint2, Box1, ComparableStrategy,
+            point_tag, box_tag, ComparableStrategyTag, false
         > PointToBox21;
 
 
