@@ -71,14 +71,15 @@ struct distance_multi_to_multi_generic
                 it != boost::end(multi1);
                 ++it, first = false)
         {
-            return_type cdist = dispatch::distance_single_to_multi
-                <
-                    typename range_value<Multi1>::type,
-                    Multi2,
-                    ComparableStrategy,
-                    typename tag<typename range_value<Multi1>::type>::type,
-                    typename tag<Multi2>::type
-                >::apply(*it, multi2, cstrategy);
+            return_type cdist =
+                dispatch::splitted_dispatch::distance_single_to_multi
+                    <
+                        typename range_value<Multi1>::type,
+                        Multi2,
+                        ComparableStrategy,
+                        typename tag<typename range_value<Multi1>::type>::type,
+                        typename tag<Multi2>::type
+                    >::apply(*it, multi2, cstrategy);
             if (first || cdist < min_cdist)
             {
                 min_cdist = cdist;
@@ -106,6 +107,8 @@ namespace dispatch
 {
 
 
+namespace splitted_dispatch
+{
 
 // default sub-dispatch for multi-multi geometries
 template
@@ -124,6 +127,8 @@ struct distance_multi_to_multi
 {};
 
 
+} // namespace splitted_dispatch
+
 
 
 // dispatch for multi-multi geometries
@@ -137,7 +142,7 @@ struct distance
     <
         MultiGeometry1, MultiGeometry2, Strategy, multi_tag, multi_tag,
         strategy_tag_distance_point_segment, false
-    > : distance_multi_to_multi
+    > : splitted_dispatch::distance_multi_to_multi
         <
             MultiGeometry1, MultiGeometry2, Strategy,
             typename geometry::tag<MultiGeometry1>::type,

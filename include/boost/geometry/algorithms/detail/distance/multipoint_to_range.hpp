@@ -146,6 +146,9 @@ namespace dispatch
 {
 
 
+namespace splitted_dispatch
+{
+
 // specializations of distance_multi_to_multi for various geometry combinations
 
 
@@ -178,6 +181,8 @@ struct distance_multi_to_multi
             MultiPoint, MultiLinestring, Strategy
         >
 {};
+
+} // namespace splitted_dispatch
 
 
 } // namespace dispatch

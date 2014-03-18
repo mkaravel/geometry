@@ -65,12 +65,6 @@ template
     typename MultiGeometryTag
 >
 struct distance_single_to_multi_generic
-//    : private dispatch::distance
-//      <
-//          Geometry,
-//          typename range_value<MultiGeometry>::type,
-//          Strategy
-//      >
 {
     typedef typename strategy::distance::services::comparable_type
         <
@@ -93,6 +87,7 @@ struct distance_single_to_multi_generic
                                     MultiGeometry const& multi,
                                     Strategy const& strategy)
     {
+        std::cout << "---> single-to-multi" << std::endl;
         return_type min_cdist = return_type();
         bool first = true;
 
@@ -149,6 +144,7 @@ struct distance_multi_to_single_generic
                                     Geometry const& geometry,
                                     Strategy const& strategy)
     {
+        std::cout << "---> multi-to-single" << std::endl;
         return distance_single_to_multi_generic
             <
                 Geometry, MultiGeometry, Strategy,
@@ -169,6 +165,9 @@ struct distance_multi_to_single_generic
 namespace dispatch
 {
 
+
+namespace splitted_dispatch
+{
 
 // default sub-dispatch for single-multi
 template
@@ -222,7 +221,7 @@ struct distance_single_to_multi
         polygon_tag, multi_linestring_tag
     > : detail::distance::range_to_range
         <
-            Polygon, MultiLinestring, Strategy, true, false
+            Polygon, MultiLinestring, Strategy, true, true
         >
 {};
 
@@ -267,7 +266,7 @@ struct distance_single_to_multi
         multi_linestring_tag, ring_tag
     > : detail::distance::range_to_range
         <
-            MultiLinestring, Ring, Strategy, false, true
+            MultiLinestring, Ring, Strategy, true, false
         >
 {};
 
@@ -280,10 +279,12 @@ struct distance_single_to_multi
         multi_polygon_tag, ring_tag
     > : detail::distance::range_to_range
         <
-            MultiPolygon, Ring, Strategy, true, true
+            MultiPolygon, Ring, Strategy, true, false
         >
 {};
 
+
+} // namespace splitted_dispatch
 
 
 // dispatch for single-multi geometry combinations
@@ -298,7 +299,7 @@ struct distance
     <
         Geometry, MultiGeometry, Strategy, GeometryTag, multi_tag,
         strategy_tag_distance_point_segment, false
-    > : distance_single_to_multi
+    > : splitted_dispatch::distance_single_to_multi
         <
             Geometry, MultiGeometry, Strategy,
             GeometryTag, typename tag<MultiGeometry>::type
@@ -319,7 +320,7 @@ struct distance
     <
         MultiGeometry, Geometry, Strategy, multi_tag, GeometryTag,
         strategy_tag_distance_point_segment, false
-    > : distance_multi_to_single
+    > : splitted_dispatch::distance_multi_to_single
         <
             MultiGeometry, Geometry, Strategy,
             typename tag<MultiGeometry>::type, GeometryTag
