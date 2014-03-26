@@ -45,12 +45,7 @@ struct distance_multi_to_multi_generic
     typedef typename strategy::distance::services::comparable_type
         <
             Strategy
-        >::type ComparableStrategy;
-
-    typedef typename strategy::distance::services::get_comparable
-        <
-            Strategy
-        > GetComparable;
+        >::type comparable_strategy;
 
     typedef typename strategy::distance::services::return_type
                      <
@@ -65,7 +60,11 @@ struct distance_multi_to_multi_generic
         return_type min_cdist = return_type();
         bool first = true;
 
-        ComparableStrategy cstrategy = GetComparable::apply(strategy);
+        comparable_strategy cstrategy =
+            strategy::distance::services::get_comparable
+                <
+                    Strategy
+                >::apply(strategy);
 
         for(typename range_iterator<Multi1 const>::type it = boost::begin(multi1);
                 it != boost::end(multi1);
@@ -76,7 +75,7 @@ struct distance_multi_to_multi_generic
                     <
                         typename range_value<Multi1>::type,
                         Multi2,
-                        ComparableStrategy,
+                        comparable_strategy,
                         typename tag<typename range_value<Multi1>::type>::type,
                         typename tag<Multi2>::type
                     >::apply(*it, multi2, cstrategy);
@@ -88,7 +87,7 @@ struct distance_multi_to_multi_generic
 
         return strategy::distance::services::comparable_to_regular
             <
-                ComparableStrategy,
+                comparable_strategy,
                 Strategy,
                 Multi1,
                 Multi2

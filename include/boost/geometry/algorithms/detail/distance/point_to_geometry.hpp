@@ -112,28 +112,28 @@ struct point_to_range
     typedef typename strategy::distance::services::comparable_type
         <
             PPStrategy
-        >::type ComparablePPStrategy;
+        >::type comparable_pp_strategy;
 
     typedef typename strategy::distance::services::comparable_type
         <
             PSStrategy
-        >::type ComparablePSStrategy;
+        >::type comparable_ps_strategy;
 
     typedef typename strategy::distance::services::get_comparable
         <
             PPStrategy
-        > GetComparablePP;
+        > get_comparable_pp;
 
     typedef typename strategy::distance::services::get_comparable
         <
             PSStrategy
-        > GetComparablePS;
+        > get_comparable_ps;
  
     static inline return_type apply(Point const& point, Range const& range,
             PPStrategy const& pp_strategy, PSStrategy const& ps_strategy)
     {
-        ComparablePPStrategy epp_strategy = GetComparablePP::apply(pp_strategy);
-        ComparablePSStrategy eps_strategy = GetComparablePS::apply(ps_strategy);
+        comparable_pp_strategy epp_strategy = get_comparable_pp::apply(pp_strategy);
+        comparable_ps_strategy eps_strategy = get_comparable_ps::apply(ps_strategy);
 
         return_type const zero = return_type(0);
 
@@ -154,7 +154,7 @@ struct point_to_range
         {
             return strategy::distance::services::comparable_to_regular
             <
-                ComparablePPStrategy,
+                comparable_pp_strategy,
                 PPStrategy,
                 Point,
                 typename point_type<Range>::type
@@ -180,7 +180,7 @@ struct point_to_range
 
         return strategy::distance::services::comparable_to_regular
             <
-                ComparablePSStrategy,
+                comparable_ps_strategy,
                 PSStrategy,
                 Point,
                 typename point_type<Range>::type
@@ -241,29 +241,29 @@ struct point_to_polygon
     typedef typename strategy::distance::services::comparable_type
         <
             PPStrategy
-        >::type ComparablePPStrategy;
+        >::type comparable_pp_strategy;
 
     typedef typename strategy::distance::services::comparable_type
         <
             PSStrategy
-        >::type ComparablePSStrategy;
+        >::type comparable_ps_strategy;
 
     typedef typename strategy::distance::services::get_comparable
         <
             PPStrategy
-        > GetComparablePP;
+        > get_comparable_pp;
 
     typedef typename strategy::distance::services::get_comparable
         <
             PSStrategy
-        > GetComparablePS;
+        > get_comparable_ps;
 
     static inline distance_containment apply(Point const& point,
                 Polygon const& polygon,
                 PPStrategy const& pp_strategy, PSStrategy const& ps_strategy)
     {
-        ComparablePPStrategy cpp_strategy = GetComparablePP::apply(pp_strategy);
-        ComparablePSStrategy cps_strategy = GetComparablePS::apply(ps_strategy);
+        comparable_pp_strategy cpp_strategy = get_comparable_pp::apply(pp_strategy);
+        comparable_ps_strategy cps_strategy = get_comparable_ps::apply(ps_strategy);
 
         // Check distance to all rings
         typedef point_to_ring
@@ -271,8 +271,8 @@ struct point_to_polygon
                 Point,
                 typename ring_type<Polygon>::type,
                 Closure,
-                ComparablePPStrategy,
-                ComparablePSStrategy
+                comparable_pp_strategy,
+                comparable_ps_strategy
             > per_ring;
 
         distance_containment dc = per_ring::apply(point,
@@ -298,7 +298,7 @@ struct point_to_polygon
 
         return_type rd = strategy::distance::services::comparable_to_regular
             <
-                ComparablePSStrategy,
+                comparable_ps_strategy,
                 PSStrategy,
                 Point,
                 typename point_type<Polygon>::type

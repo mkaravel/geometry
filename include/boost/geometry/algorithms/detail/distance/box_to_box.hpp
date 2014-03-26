@@ -37,41 +37,36 @@ template
 class distance_box_box_2D
 {
 private:
-    typedef typename point_type<Box1>::type BoxPoint1;
-    typedef typename point_type<Box2>::type BoxPoint2;
+    typedef typename point_type<Box1>::type box_point1;
+    typedef typename point_type<Box2>::type box_point2;
 
     typedef typename strategy::distance::services::comparable_type
         <
             Strategy
-        >::type ComparableStrategy;
-
-    typedef typename strategy::distance::services::get_comparable
-        <
-            Strategy
-        > GetComparable;
+        >::type comparable_strategy;
 
     typedef typename strategy::distance::services::tag
         <
-            ComparableStrategy
-        >::type ComparableStrategyTag;
+            comparable_strategy
+        >::type comparable_strategy_tag;
 
     typedef dispatch::distance
         <
-            BoxPoint1, Box2, ComparableStrategy,
-            point_tag, box_tag, ComparableStrategyTag, false
-        > PointToBox12;
+            box_point1, Box2, comparable_strategy,
+            point_tag, box_tag, comparable_strategy_tag, false
+        > point_to_box12;
 
     typedef dispatch::distance
         <
-            BoxPoint2, Box1, ComparableStrategy,
-            point_tag, box_tag, ComparableStrategyTag, false
-        > PointToBox21;
+            box_point2, Box1, comparable_strategy,
+            point_tag, box_tag, comparable_strategy_tag, false
+        > point_to_box21;
 
 
 public:
     typedef typename strategy::distance::services::return_type
         <
-            Strategy, BoxPoint1, BoxPoint2
+            Strategy, box_point1, box_point2
         >::type return_type;
 
 
@@ -86,9 +81,13 @@ public:
 
         return_type d[8];
 
-        ComparableStrategy cstrategy = GetComparable::apply(strategy);
+        comparable_strategy cstrategy =
+            strategy::distance::services::get_comparable
+                <
+                    Strategy
+                >::apply(strategy);
 
-        BoxPoint1 top_left1, bottom_right1;
+        box_point1 top_left1, bottom_right1;
         geometry::assign_values(top_left1,
                                 geometry::get<0>(box1.min_corner()),
                                 geometry::get<1>(box1.max_corner()));
@@ -97,7 +96,7 @@ public:
                                 geometry::get<0>(box1.max_corner()),
                                 geometry::get<1>(box1.min_corner()));
 
-        BoxPoint2 top_left2, bottom_right2;
+        box_point2 top_left2, bottom_right2;
         geometry::assign_values(top_left2,
                                 geometry::get<0>(box2.min_corner()),
                                 geometry::get<1>(box2.max_corner()));
@@ -106,19 +105,19 @@ public:
                                 geometry::get<0>(box2.max_corner()),
                                 geometry::get<1>(box2.min_corner()));
         
-        d[0] = PointToBox12::apply(box1.min_corner(), box2, cstrategy);
-        d[1] = PointToBox12::apply(box1.max_corner(), box2, cstrategy);
-        d[2] = PointToBox12::apply(top_left1, box2, cstrategy);
-        d[3] = PointToBox12::apply(bottom_right1, box2, cstrategy);
+        d[0] = point_to_box12::apply(box1.min_corner(), box2, cstrategy);
+        d[1] = point_to_box12::apply(box1.max_corner(), box2, cstrategy);
+        d[2] = point_to_box12::apply(top_left1, box2, cstrategy);
+        d[3] = point_to_box12::apply(bottom_right1, box2, cstrategy);
 
-        d[4] = PointToBox21::apply(box2.min_corner(), box1, cstrategy);
-        d[5] = PointToBox21::apply(box2.max_corner(), box1, cstrategy);
-        d[6] = PointToBox21::apply(top_left2, box1, cstrategy);
-        d[7] = PointToBox21::apply(bottom_right2, box1, cstrategy);
+        d[4] = point_to_box21::apply(box2.min_corner(), box1, cstrategy);
+        d[5] = point_to_box21::apply(box2.max_corner(), box1, cstrategy);
+        d[6] = point_to_box21::apply(top_left2, box1, cstrategy);
+        d[7] = point_to_box21::apply(bottom_right2, box1, cstrategy);
 
         return strategy::distance::services::comparable_to_regular
             <
-                ComparableStrategy,
+                comparable_strategy,
                 Strategy,
                 Box1,
                 Box2

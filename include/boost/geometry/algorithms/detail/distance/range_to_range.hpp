@@ -84,12 +84,12 @@ struct range_to_range
     typedef typename strategy::distance::services::comparable_type
         <
             Strategy
-        >::type ComparableStrategy;
+        >::type comparable_strategy;
 
     typedef typename strategy::distance::services::get_comparable
         <
             Strategy
-        > GetComparable;
+        > get_comparable;
 
     static inline return_type
     apply(Range1 const& range1, Range2 const& range2,
@@ -100,17 +100,17 @@ struct range_to_range
             return 0;
         }
 
-        ComparableStrategy cstrategy = GetComparable::apply(strategy);
+        comparable_strategy cstrategy = get_comparable::apply(strategy);
 
         return_type dmin = detail::distance::linear_to_linear_rtree
             <
-                Range1, Range2, ComparableStrategy,
+                Range1, Range2, comparable_strategy,
                 CollectPoints1, CollectPoints2
             >::apply(range1, range2, cstrategy, false);
 
         return strategy::distance::services::comparable_to_regular
             <
-                ComparableStrategy,
+                comparable_strategy,
                 Strategy,
                 typename point_type<Range1>::type,
                 typename point_type<Range2>::type

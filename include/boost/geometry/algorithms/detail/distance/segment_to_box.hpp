@@ -37,31 +37,29 @@ template
 class distance_segment_box_2D
 {
 private:
-    typedef typename point_type<Segment>::type SegmentPoint;
-    typedef typename point_type<Box>::type BoxPoint;
+    typedef typename point_type<Segment>::type segment_point;
+    typedef typename point_type<Box>::type box_point;
 
     typedef typename strategy::distance::services::comparable_type
         <
             Strategy
-        >::type ComparableStrategy;
-
-    typedef typename strategy::distance::services::get_comparable
-        <
-            Strategy
-        > GetComparable;
+        >::type comparable_strategy;
 
     typedef typename strategy::distance::services::strategy_point_point
         <
-            ComparableStrategy
+            comparable_strategy
         >::type pp_strategy_type;
 
-    typedef point_to_box<SegmentPoint, Box, pp_strategy_type> PointToBox;
+    typedef point_to_box
+        <
+            segment_point, Box, pp_strategy_type
+        > distance_point_to_box;
 
 
 public:
     typedef typename strategy::distance::services::return_type
         <
-            ComparableStrategy, SegmentPoint, BoxPoint
+            comparable_strategy, segment_point, box_point
         >::type return_type;
 
 
@@ -74,22 +72,26 @@ public:
             return 0;
         }
 
-        SegmentPoint p[2];
+        segment_point p[2];
         detail::assign_point_from_index<0>(segment, p[0]);
         detail::assign_point_from_index<1>(segment, p[1]);
 
         return_type d[6];
 
         pp_strategy_type pp_strategy;
-        d[0] = PointToBox::apply(p[0], box, pp_strategy);
-        d[1] = PointToBox::apply(p[1], box, pp_strategy);
+        d[0] = distance_point_to_box::apply(p[0], box, pp_strategy);
+        d[1] = distance_point_to_box::apply(p[1], box, pp_strategy);
 
-        ComparableStrategy cstrategy = GetComparable::apply(strategy);
+        comparable_strategy cstrategy =
+            strategy::distance::services::get_comparable
+                <
+                    Strategy
+                >::apply(strategy);
 
         d[2] = cstrategy.apply(box.min_corner(), p[0], p[1]);
         d[3] = cstrategy.apply(box.max_corner(), p[0], p[1]);
 
-        BoxPoint top_left, bottom_right;
+        box_point top_left, bottom_right;
 
         geometry::assign_values(top_left,
                                 geometry::get<0>(box.min_corner()),
@@ -104,7 +106,7 @@ public:
 
         return strategy::distance::services::comparable_to_regular
             <
-                ComparableStrategy,
+                comparable_strategy,
                 Strategy,
                 Segment,
                 Box

@@ -46,12 +46,12 @@ struct segment_to_segment
     typedef typename strategy::distance::services::comparable_type
         <
             Strategy
-        >::type ComparableStrategy;
+        >::type comparable_strategy;
 
     typedef typename strategy::distance::services::get_comparable
         <
             Strategy
-        > GetComparable;
+        > get_comparable;
 
     static inline return_type
     apply(Segment1 const& segment1, Segment2 const& segment2,
@@ -71,7 +71,7 @@ struct segment_to_segment
         detail::assign_point_from_index<1>(segment2, q[1]);
 
         return_type d[4];
-        ComparableStrategy cstrategy = GetComparable::apply(strategy);
+        comparable_strategy cstrategy = get_comparable::apply(strategy);
         d[0] = cstrategy.apply(q[0], p[0], p[1]);
         d[1] = cstrategy.apply(q[1], p[0], p[1]);
         d[2] = cstrategy.apply(p[0], q[0], q[1]);
@@ -88,7 +88,7 @@ struct segment_to_segment
 
         return strategy::distance::services::comparable_to_regular
             <
-                ComparableStrategy,
+                comparable_strategy,
                 Strategy,
                 typename point_type<Segment1>::type,
                 typename point_type<Segment2>::type

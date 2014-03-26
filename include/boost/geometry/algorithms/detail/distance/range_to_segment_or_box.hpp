@@ -47,42 +47,37 @@ template
 class range_to_segment_or_box
 {
 private:
-    typedef typename point_type<SegmentOrBox>::type SegmentOrBoxPoint;
-    typedef typename point_type<Range>::type RangePoint;
+    typedef typename point_type<SegmentOrBox>::type segment_or_box_point;
+    typedef typename point_type<Range>::type range_point;
 
     typedef typename strategy::distance::services::comparable_type
         <
             Strategy
-        >::type ComparableStrategy;
-
-    typedef typename strategy::distance::services::get_comparable
-        <
-            Strategy
-        > GetComparable;
+        >::type comparable_strategy;
 
     typedef typename strategy::distance::services::tag
        <
-           ComparableStrategy
-       >::type ComparableStrategyTag;
+           comparable_strategy
+       >::type comparable_strategy_tag;
 
     typedef dispatch::distance
         <
-            SegmentOrBoxPoint, Range, ComparableStrategy,
+            segment_or_box_point, Range, comparable_strategy,
             point_tag, typename tag<Range>::type,
-            ComparableStrategyTag, false
+            comparable_strategy_tag, false
         > point_to_range;
 
     typedef dispatch::distance
         <
-            RangePoint, SegmentOrBox, ComparableStrategy,
+            range_point, SegmentOrBox, comparable_strategy,
             point_tag, typename tag<SegmentOrBox>::type,
-            ComparableStrategyTag, false
+            comparable_strategy_tag, false
         > point_to_segment_or_box;
 
 public:
     typedef typename strategy::distance::services::return_type
         <
-            Strategy, RangePoint, SegmentOrBoxPoint
+            Strategy, range_point, segment_or_box_point
         >::type return_type;
 
     static inline return_type
@@ -94,10 +89,16 @@ public:
             return 0;
         }
 
-        ComparableStrategy cstrategy = GetComparable::apply(strategy);
+        comparable_strategy cstrategy =
+            strategy::distance::services::get_comparable
+                <
+                    Strategy
+                >::apply(strategy);
+
+
 
         // get all points of the segment or the box
-        std::vector<SegmentOrBoxPoint> segment_or_box_points;
+        std::vector<segment_or_box_point> segment_or_box_points;
         get_points
             <
                 SegmentOrBox
@@ -133,8 +134,8 @@ public:
 
         return strategy::distance::services::comparable_to_regular
             <
-                ComparableStrategy, Strategy,
-                RangePoint, SegmentOrBoxPoint
+                comparable_strategy, Strategy,
+                range_point, segment_or_box_point
             >::apply(cd_min);
     }
 

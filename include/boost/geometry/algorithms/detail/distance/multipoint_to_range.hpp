@@ -48,12 +48,7 @@ struct multipoint_to_multipoint
     typedef typename strategy::distance::services::comparable_type
         <
             Strategy
-        >::type ComparableStrategy;
-
-    typedef typename strategy::distance::services::get_comparable
-        <
-            Strategy
-        > GetComparable;
+        >::type comparable_strategy;
 
     static inline return_type apply(MultiPoint1 const& multipoint1,
                                     MultiPoint2 const& multipoint2,
@@ -68,16 +63,20 @@ struct multipoint_to_multipoint
                 >::apply(multipoint2, multipoint1, strategy);
         }
 
-        ComparableStrategy cstrategy = GetComparable::apply(strategy);
+        comparable_strategy cstrategy =
+            strategy::distance::services::get_comparable
+                <
+                    Strategy
+                >::apply(strategy);
 
         return_type min_cdist = range_to_range_rtree
             <
-                MultiPoint1, MultiPoint2, ComparableStrategy
+                MultiPoint1, MultiPoint2, comparable_strategy
             >::apply(multipoint1, multipoint2, cstrategy);
 
         return strategy::distance::services::comparable_to_regular
             <
-                ComparableStrategy,
+                comparable_strategy,
                 Strategy,
                 MultiPoint1,
                 MultiPoint2
@@ -100,27 +99,26 @@ struct multipoint_to_linear
     typedef typename strategy::distance::services::comparable_type
         <
             Strategy
-        >::type ComparableStrategy;
-
-    typedef typename strategy::distance::services::get_comparable
-        <
-            Strategy
-        > GetComparable;
+        >::type comparable_strategy;
 
     static inline return_type apply(MultiPoint const& multipoint,
                                     Geometry const& geometry,
                                     Strategy const& strategy)
     {
-        ComparableStrategy cstrategy = GetComparable::apply(strategy);
+        comparable_strategy cstrategy =
+            strategy::distance::services::get_comparable
+                <
+                    Strategy
+                >::apply(strategy);
 
         return_type min_cdist = point_range_to_linear_rtree
             <
-                MultiPoint, Geometry, ComparableStrategy
+                MultiPoint, Geometry, comparable_strategy
             >::apply(multipoint, geometry, cstrategy);
 
         return strategy::distance::services::comparable_to_regular
             <
-                ComparableStrategy,
+                comparable_strategy,
                 Strategy,
                 MultiPoint,
                 Geometry

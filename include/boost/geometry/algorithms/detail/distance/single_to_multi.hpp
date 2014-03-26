@@ -69,12 +69,7 @@ struct distance_single_to_multi_generic
     typedef typename strategy::distance::services::comparable_type
         <
             Strategy
-        >::type ComparableStrategy;
-
-    typedef typename strategy::distance::services::get_comparable
-        <
-            Strategy
-        > GetComparable;
+        >::type comparable_strategy;
 
     typedef typename strategy::distance::services::return_type
                      <
@@ -87,11 +82,14 @@ struct distance_single_to_multi_generic
                                     MultiGeometry const& multi,
                                     Strategy const& strategy)
     {
-        std::cout << "---> single-to-multi" << std::endl;
         return_type min_cdist = return_type();
         bool first = true;
 
-        ComparableStrategy cstrategy = GetComparable::apply(strategy);
+        comparable_strategy cstrategy =
+            strategy::distance::services::get_comparable
+                <
+                    Strategy
+                >::apply(strategy);
 
         for (typename range_iterator<MultiGeometry const>::type it = boost::begin(multi);
                 it != boost::end(multi);
@@ -101,7 +99,7 @@ struct distance_single_to_multi_generic
                 <
                     Geometry,
                     typename range_value<MultiGeometry>::type,
-                    ComparableStrategy
+                    comparable_strategy
                 >::apply(geometry, *it, cstrategy);
 
             if (first || cdist < min_cdist)
@@ -112,7 +110,7 @@ struct distance_single_to_multi_generic
 
         return strategy::distance::services::comparable_to_regular
             <
-                ComparableStrategy,
+                comparable_strategy,
                 Strategy,
                 Geometry,
                 MultiGeometry
@@ -144,7 +142,6 @@ struct distance_multi_to_single_generic
                                     Geometry const& geometry,
                                     Strategy const& strategy)
     {
-        std::cout << "---> multi-to-single" << std::endl;
         return distance_single_to_multi_generic
             <
                 Geometry, MultiGeometry, Strategy,

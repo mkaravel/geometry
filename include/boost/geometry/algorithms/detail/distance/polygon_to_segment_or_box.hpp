@@ -47,12 +47,7 @@ struct polygon_to_segment_or_box
     typedef typename strategy::distance::services::comparable_type
        <
            Strategy
-       >::type ComparableStrategy;
-
-    typedef typename strategy::distance::services::get_comparable
-       <
-           Strategy
-       > GetComparable;
+       >::type comparable_strategy;
 
     static inline return_type apply(Polygon const& polygon,
                                     SegmentOrBox const& segment_or_box,
@@ -70,12 +65,17 @@ struct polygon_to_segment_or_box
         e_ring const& ext_ring = geometry::exterior_ring<Polygon>(polygon);
         i_rings const& int_rings = geometry::interior_rings<Polygon>(polygon);
 
-        ComparableStrategy cstrategy = GetComparable::apply(strategy);
+        comparable_strategy cstrategy =
+            strategy::distance::services::get_comparable
+                <
+                    Strategy
+                >::apply(strategy);
+
 
         return_type cd_min = range_to_segment_or_box
             <
                 e_ring, SegmentOrBox,
-                closure<Polygon>::value, ComparableStrategy
+                closure<Polygon>::value, comparable_strategy
             >::apply(ext_ring, segment_or_box, cstrategy, false);
 
         typedef typename boost::range_iterator<i_rings const>::type iterator_type;
@@ -85,7 +85,7 @@ struct polygon_to_segment_or_box
             return_type cd = range_to_segment_or_box
                 <
                     i_ring, SegmentOrBox,
-                    closure<Polygon>::value, ComparableStrategy
+                    closure<Polygon>::value, comparable_strategy
                 >::apply(*it, segment_or_box, cstrategy, false);
 
             if ( cd < cd_min )
@@ -96,7 +96,7 @@ struct polygon_to_segment_or_box
 
         return strategy::distance::services::comparable_to_regular
             <
-                ComparableStrategy,
+                comparable_strategy,
                 Strategy,
                 typename point_type<Polygon>::type,
                 typename point_type<SegmentOrBox>::type
