@@ -35,7 +35,7 @@ int main()
 
     if ( is_valid2 )
     {
-        std::cout << "1st polygon is valid ..." << std::endl;
+        std::cout << "2nd polygon is valid ..." << std::endl;
     }
     else
     {
