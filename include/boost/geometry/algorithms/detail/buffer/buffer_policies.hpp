@@ -61,7 +61,6 @@ g_backtrack_warning_count++;
 //std::cout << "!";
 //std::cout << "WARNING " << reason << std::endl;
 
-        // TODO this is a copy of dissolve, check this for buffer
         state.m_good = false;
 
         // Make bad output clean
@@ -107,7 +106,7 @@ struct buffer_turn_info
     int turn_index; // TODO: this might go if partition can operate on non-const input
 
     RobustPoint robust_point;
-#if BOOST_GEOMETRY_BUFFER_ENLARGED_CLUSTERS
+#if defined(BOOST_GEOMETRY_BUFFER_ENLARGED_CLUSTERS)
     // Will (most probably) be removed later
     RobustPoint mapped_robust_point; // alas... we still need to adapt our points, offsetting them 1 integer to be co-located with neighbours
 #endif
@@ -115,7 +114,7 @@ struct buffer_turn_info
 
     inline RobustPoint const& get_robust_point() const
     {
-#if BOOST_GEOMETRY_BUFFER_ENLARGED_CLUSTERS
+#if defined(BOOST_GEOMETRY_BUFFER_ENLARGED_CLUSTERS)
         return mapped_robust_point;
 #endif
         return robust_point;
@@ -127,6 +126,9 @@ struct buffer_turn_info
     int count_within;
     int count_on_offsetted;
     int count_on_helper;
+    int count_within_near_offsetted;
+
+    // Obsolete:
     int count_on_occupied;
     int count_on_multi;
 
@@ -136,6 +138,7 @@ struct buffer_turn_info
         , count_within(0)
         , count_on_offsetted(0)
         , count_on_helper(0)
+        , count_within_near_offsetted(0)
         , count_on_occupied(0)
         , count_on_multi(0)
     {}

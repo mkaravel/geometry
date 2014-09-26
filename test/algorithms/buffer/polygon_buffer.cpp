@@ -80,139 +80,159 @@ static std::string const parcel3
 static std::string const parcel3_bend // of parcel_3 - clipped
     = "POLYGON((120399.40000152588 461986.43000030518, 120399.47999954224 461986.43000030518, 120403 461986.76769953477, 120403 461987.777217312, 120399.90000152588 461987.47999954224, 120399.72722010587 461990, 120398.71791817161 461990, 120398.93000030518 461986.90000152588, 120398.95000076294 461986.81999969482, 120398.9700012207 461986.74000167847, 120399.00999832153 461986.66999816895, 120399.04999923706 461986.61000061035, 120399.11000061035 461986.54999923706, 120399.16999816895 461986.5, 120399.25 461986.4700012207, 120399.31999969482 461986.43999862671, 120399.40000152588 461986.43000030518))";
 
+// Ticket 10398, fails at next distances ( /10.0 ):
+// #1: 5,25,84
+// #2: 5,13,45,49,60,62,66,73
+// #3: 4,8,12,35,45,54
+// #4: 6,19,21,23,30,43,45,66,78,91
+
+static std::string const ticket_10398_1
+    = "POLYGON((897866.5 6272518.7,897882.5 6272519.2,897882.6 6272519,897883.3 6272508.7,897883.5 6272505.5,897855 6272503.5,897852.4 6272505.6,897850.1 6272517.6,897860.8 6272518.5,897866.5 6272518.7))";
+static std::string const ticket_10398_2
+    = "POLYGON((898882.3 6271337.3,898895.7 6271339.9,898898 6271328.3,898881.6 6271325.1,898879.3 6271336.7,898882.3 6271337.3))";
+static std::string const ticket_10398_3
+    = "POLYGON((897558.7 6272055,897552.5 6272054.2,897552.5 6272053.7,897546.1 6272052.7,897545.6 6272057.7,897560.7 6272059.6,897560.9 6272055.3,897558.7 6272055))";
+static std::string const ticket_10398_4
+    = "POLYGON((898563.3 6272366.9,898554.7 6272379.2,898559.7 6272382.3,898561.6 6272379.4,898568.7 6272369.1,898563.8 6272366.2,898563.3 6272366.9))";
+
+static std::string const ticket_10412
+    = "POLYGON((897747.8 6270564.3,897764.3 6270569.7,897776.5 6270529.5,897768.1 6270527.1,897767.6 6270529.4,897756.3 6270525.8,897745.8 6270522.3,897752 6270502.9,897749.7 6270502,897750.7 6270499.1,897751.8 6270498.6,897752.3 6270499.3,897754.6 6270497.9,897755.8 6270500.2,897766.8 6270494.1,897765.6 6270491.5,897768.3 6270490.5,897770.9 6270491.5,897770.2 6270494.6,897780.1 6270497.5,897781 6270494.6,897786.8 6270496.6,897790.8 6270482.5,897785.3 6270480.7,897785.9 6270478.2,897768.9 6270473.2,897768.1 6270475.8,897766.1 6270475.2,897758.7 6270479.2,897753.2 6270481.8,897751.9 6270479,897746.5 6270481.9,897748 6270484.6,897745.2 6270486.1,897743.9 6270483.3,897741.4 6270484.7,897742.6 6270487.3,897739.4 6270488.9,897738.3 6270486.3,897735.6 6270487.8,897733.1 6270496.8,897731.2 6270502.7,897732.4 6270503.2,897731.5 6270506.1,897730.3 6270505.7,897725.8 6270520.2,897726.8 6270520.7,897726 6270523,897728 6270523.7,897726.3 6270529.6,897742.8 6270534.5,897741.2 6270539.9,897751.4 6270543.4,897750.7 6270546.4,897753.2 6270547.2,897747.8 6270564.3))";
 
 
 template <typename P>
 void test_all()
 {
-    namespace buf = bg::strategy::buffer;
-
     typedef bg::model::polygon<P> polygon_type;
 
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("simplex", simplex, 47.9408, 1.5);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("simplex", simplex, 52.8733, 1.5);
+    bg::strategy::buffer::join_miter join_miter(10.0);
+    bg::strategy::buffer::join_round join_round(100);
+    bg::strategy::buffer::end_flat end_flat;
+    bg::strategy::buffer::end_round end_round(100);
 
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("concave_simplex", concave_simplex, 14.5616, 0.5);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("concave_simplex", concave_simplex, 16.3861, 0.5);
+    test_one<polygon_type, polygon_type>("simplex", simplex, join_round, end_flat, 47.9408, 1.5);
+    test_one<polygon_type, polygon_type>("simplex", simplex, join_miter, end_flat, 52.8733, 1.5);
 
-    test_one<polygon_type, buf::join_round, buf::end_round, polygon_type>("spike_simplex15", spike_simplex, 50.3633, 1.5);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("spike_simplex15", spike_simplex, 51.5509, 1.5);
+    test_one<polygon_type, polygon_type>("concave_simplex", concave_simplex, join_round, end_flat, 14.5616, 0.5);
+    test_one<polygon_type, polygon_type>("concave_simplex", concave_simplex, join_miter, end_flat, 16.3861, 0.5);
+
+    test_one<polygon_type, polygon_type>("spike_simplex15", spike_simplex, join_round, end_round, 50.3633, 1.5);
+    test_one<polygon_type, polygon_type>("spike_simplex15", spike_simplex, join_miter, end_flat, 51.5509, 1.5);
 
 #if defined(BOOST_GEOMETRY_BUFFER_INCLUDE_FAILING_TESTS)
-    test_one<polygon_type, buf::join_round, buf::end_round, polygon_type>("spike_simplex30", spike_simplex, 100.9199, 3.0);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("spike_simplex30", spike_simplex, 120.9859, 3.0);
+    test_one<polygon_type, polygon_type>("spike_simplex30", spike_simplex, join_round, end_round, 100.9199, 3.0);
+    test_one<polygon_type, polygon_type>("spike_simplex30", spike_simplex, join_miter, end_flat, 120.9859, 3.0);
 #endif
-    test_one<polygon_type, buf::join_round, buf::end_round, polygon_type>("spike_simplex150", spike_simplex, 998.9530, 15.0);
+    test_one<polygon_type, polygon_type>("spike_simplex150", spike_simplex, join_round, end_round, 998.9530, 15.0);
 #if defined(BOOST_GEOMETRY_BUFFER_INCLUDE_FAILING_TESTS)
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("spike_simplex150", spike_simplex, 1532.6543, 15.0);
+    test_one<polygon_type, polygon_type>("spike_simplex150", spike_simplex, join_miter, end_flat, 1532.6543, 15.0);
 #endif
 
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("join_types", join_types, 88.2060, 1.5);
+    test_one<polygon_type, polygon_type>("join_types", join_types, join_round, end_flat, 88.2060, 1.5);
 
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("chained_box", chained_box, 83.1403, 1.0);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("chained_box", chained_box, 84, 1.0);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("L", letter_L, 13.7314, 0.5);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("L", letter_L, 14.0, 0.5);
+    test_one<polygon_type, polygon_type>("chained_box", chained_box, join_round, end_flat, 83.1403, 1.0);
+    test_one<polygon_type, polygon_type>("chained_box", chained_box, join_miter, end_flat, 84, 1.0);
+    test_one<polygon_type, polygon_type>("L", letter_L, join_round, end_flat, 13.7314, 0.5);
+    test_one<polygon_type, polygon_type>("L", letter_L, join_miter, end_flat, 14.0, 0.5);
 
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("chained_box", chained_box, 84, 1.0);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("chained_box", chained_box, 83.1403, 1.0);
+    test_one<polygon_type, polygon_type>("chained_box", chained_box, join_miter, end_flat, 84, 1.0);
+    test_one<polygon_type, polygon_type>("chained_box", chained_box, join_round, end_flat, 83.1403, 1.0);
 
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("indentation4", indentation, 25.7741, 0.4);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("indentation4", indentation, 25.5695, 0.4);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("indentation5", indentation, 28.2426, 0.5);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("indentation5", indentation, 27.9953, 0.5);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("indentation6", indentation, 30.6712, 0.6);
+    test_one<polygon_type, polygon_type>("indentation4", indentation, join_miter, end_flat, 25.7741, 0.4);
+    test_one<polygon_type, polygon_type>("indentation4", indentation, join_round, end_flat, 25.5695, 0.4);
+    test_one<polygon_type, polygon_type>("indentation5", indentation, join_miter, end_flat, 28.2426, 0.5);
+    test_one<polygon_type, polygon_type>("indentation5", indentation, join_round, end_flat, 27.9953, 0.5);
+    test_one<polygon_type, polygon_type>("indentation6", indentation, join_miter, end_flat, 30.6712, 0.6);
 
     // SQL Server gives 30.34479159164
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("indentation6", indentation, 30.3445, 0.6);
+    test_one<polygon_type, polygon_type>("indentation6", indentation, join_round, end_flat, 30.3445, 0.6);
 
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("indentation7", indentation, 33.0958, 0.7);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("indentation7", indentation, 32.6533, 0.7);
+    test_one<polygon_type, polygon_type>("indentation7", indentation, join_miter, end_flat, 33.0958, 0.7);
+    test_one<polygon_type, polygon_type>("indentation7", indentation, join_round, end_flat, 32.6533, 0.7);
 
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("indentation8", indentation, 35.5943, 0.8);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("indentation8", indentation, 35.0164, 0.8);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("indentation12", indentation, 46.3541, 1.2);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("indentation12", indentation, 45.0537, 1.2);
+    test_one<polygon_type, polygon_type>("indentation8", indentation, join_miter, end_flat, 35.5943, 0.8);
+    test_one<polygon_type, polygon_type>("indentation8", indentation, join_round, end_flat, 35.0164, 0.8);
+    test_one<polygon_type, polygon_type>("indentation12", indentation, join_miter, end_flat, 46.3541, 1.2);
+    test_one<polygon_type, polygon_type>("indentation12", indentation, join_round, end_flat, 45.0537, 1.2);
 
     // TODO: fix, the buffered pieces are currently counterclockwise, that should be reversed
-    //test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("indentation4_neg", indentation, 6.99098413022335, -0.4);
-    //test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("indentation4_neg", indentation, 7.25523322189147, -0.4);
-    //test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("indentation8_neg", indentation, 1.36941992048731, -0.8);
-    //test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("indentation8_neg", indentation, 1.37375487490664, -0.8);
-    //test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("indentation12_neg", indentation, 0, -1.2);
-    //test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("indentation12_neg", indentation, 0, -1.2);
+    //test_one<polygon_type, polygon_type>("indentation4_neg", indentation, join_miter, end_flat, 6.99098413022335, -0.4);
+    //test_one<polygon_type, polygon_type>("indentation4_neg", indentation, join_round, end_flat, 7.25523322189147, -0.4);
+    //test_one<polygon_type, polygon_type>("indentation8_neg", indentation, join_miter, end_flat, 1.36941992048731, -0.8);
+    //test_one<polygon_type, polygon_type>("indentation8_neg", indentation, join_round, end_flat, 1.37375487490664, -0.8);
+    //test_one<polygon_type, polygon_type>("indentation12_neg", indentation, join_miter, end_flat, 0, -1.2);
+    //test_one<polygon_type, polygon_type>("indentation12_neg", indentation, join_round, end_flat, 0, -1.2);
 
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("donut_simplex6", donut_simplex, 53.648, 0.6);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("donut_simplex6", donut_simplex, 52.820, 0.6);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("donut_simplex8", donut_simplex, 61.132, 0.8);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("donut_simplex8", donut_simplex, 59.6713, 0.8);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("donut_simplex10", donut_simplex, 68.670, 1.0);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("donut_simplex10", donut_simplex, 66.387, 1.0);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("donut_simplex12", donut_simplex, 76.605, 1.2);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("donut_simplex12", donut_simplex, 73.3179, 1.2);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("donut_simplex14", donut_simplex, 84.974, 1.4);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("donut_simplex14", donut_simplex, 80.500, 1.4);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("donut_simplex16", donut_simplex, 93.777, 1.6);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("donut_simplex16", donut_simplex, 87.933, 1.6);
+    test_one<polygon_type, polygon_type>("donut_simplex6", donut_simplex, join_miter, end_flat, 53.648, 0.6);
+    test_one<polygon_type, polygon_type>("donut_simplex6", donut_simplex, join_round, end_flat, 52.820, 0.6);
+    test_one<polygon_type, polygon_type>("donut_simplex8", donut_simplex, join_miter, end_flat, 61.132, 0.8);
+    test_one<polygon_type, polygon_type>("donut_simplex8", donut_simplex, join_round, end_flat, 59.6713, 0.8);
+    test_one<polygon_type, polygon_type>("donut_simplex10", donut_simplex, join_miter, end_flat, 68.670, 1.0);
+    test_one<polygon_type, polygon_type>("donut_simplex10", donut_simplex, join_round, end_flat, 66.387, 1.0);
+    test_one<polygon_type, polygon_type>("donut_simplex12", donut_simplex, join_miter, end_flat, 76.605, 1.2);
+    test_one<polygon_type, polygon_type>("donut_simplex12", donut_simplex, join_round, end_flat, 73.3179, 1.2);
+    test_one<polygon_type, polygon_type>("donut_simplex14", donut_simplex, join_miter, end_flat, 84.974, 1.4);
+    test_one<polygon_type, polygon_type>("donut_simplex14", donut_simplex, join_round, end_flat, 80.500, 1.4);
+    test_one<polygon_type, polygon_type>("donut_simplex16", donut_simplex, join_miter, end_flat, 93.777, 1.6);
+    test_one<polygon_type, polygon_type>("donut_simplex16", donut_simplex, join_round, end_flat, 87.933, 1.6);
 
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("donut_diamond1", donut_diamond, 280.0, 1.0);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("donut_diamond4", donut_diamond, 529.0, 4.0);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("donut_diamond5", donut_diamond, 625.0, 5.0);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("donut_diamond6", donut_diamond, 729.0, 6.0);
+    test_one<polygon_type, polygon_type>("donut_diamond1", donut_diamond, join_miter, end_flat, 280.0, 1.0);
+    test_one<polygon_type, polygon_type>("donut_diamond4", donut_diamond, join_miter, end_flat, 529.0, 4.0);
+    test_one<polygon_type, polygon_type>("donut_diamond5", donut_diamond, join_miter, end_flat, 625.0, 5.0);
+    test_one<polygon_type, polygon_type>("donut_diamond6", donut_diamond, join_miter, end_flat, 729.0, 6.0);
 
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("arrow4", arrow, 28.265, 0.4);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("arrow4", arrow, 27.039, 0.4);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("arrow5", arrow, 31.500, 0.5);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("arrow5", arrow, 29.621, 0.5);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("arrow6", arrow, 34.903, 0.6);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("arrow6", arrow, 32.268, 0.6);
+    test_one<polygon_type, polygon_type>("arrow4", arrow, join_miter, end_flat, 28.265, 0.4);
+    test_one<polygon_type, polygon_type>("arrow4", arrow, join_round, end_flat, 27.039, 0.4);
+    test_one<polygon_type, polygon_type>("arrow5", arrow, join_miter, end_flat, 31.500, 0.5);
+    test_one<polygon_type, polygon_type>("arrow5", arrow, join_round, end_flat, 29.621, 0.5);
+    test_one<polygon_type, polygon_type>("arrow6", arrow, join_miter, end_flat, 34.903, 0.6);
+    test_one<polygon_type, polygon_type>("arrow6", arrow, join_round, end_flat, 32.268, 0.6);
 
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("tipped_aitch3", tipped_aitch, 55.36, 0.3);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("tipped_aitch9", tipped_aitch, 77.44, 0.9);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("tipped_aitch13", tipped_aitch, 92.16, 1.3);
+    test_one<polygon_type, polygon_type>("tipped_aitch3", tipped_aitch, join_miter, end_flat, 55.36, 0.3);
+    test_one<polygon_type, polygon_type>("tipped_aitch9", tipped_aitch, join_miter, end_flat, 77.44, 0.9);
+    test_one<polygon_type, polygon_type>("tipped_aitch13", tipped_aitch, join_miter, end_flat, 92.16, 1.3);
 
     // SQL Server: 55.205415532967 76.6468846383224 90.642916957136
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("tipped_aitch3", tipped_aitch, 55.2053, 0.3);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("tipped_aitch9", tipped_aitch, 76.6457, 0.9);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("tipped_aitch13", tipped_aitch, 90.641, 1.3);
+    test_one<polygon_type, polygon_type>("tipped_aitch3", tipped_aitch, join_round, end_flat, 55.2053, 0.3);
+    test_one<polygon_type, polygon_type>("tipped_aitch9", tipped_aitch, join_round, end_flat, 76.6457, 0.9);
+    test_one<polygon_type, polygon_type>("tipped_aitch13", tipped_aitch, join_round, end_flat, 90.641, 1.3);
 
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("snake4", snake, 64.44, 0.4);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("snake5", snake, 72, 0.5);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("snake6", snake, 75.44, 0.6);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("snake16", snake, 114.24, 1.6);
+    test_one<polygon_type, polygon_type>("snake4", snake, join_miter, end_flat, 64.44, 0.4);
+    test_one<polygon_type, polygon_type>("snake5", snake, join_miter, end_flat, 72, 0.5);
+    test_one<polygon_type, polygon_type>("snake6", snake, join_miter, end_flat, 75.44, 0.6);
+    test_one<polygon_type, polygon_type>("snake16", snake, join_miter, end_flat, 114.24, 1.6);
 
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("funnelgate2", funnelgate, 120.982, 2);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("funnelgate3", funnelgate, 13*13, 3);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("funnelgate4", funnelgate, 15*15, 4);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("gammagate1", gammagate, 88, 1);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("fork_a1", fork_a, 88, 1);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("fork_b1", fork_b, 154, 1);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("fork_c1", fork_c, 152, 1);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("triangle", triangle, 14.6569, 1.0);
+    test_one<polygon_type, polygon_type>("funnelgate2", funnelgate, join_miter, end_flat, 120.982, 2);
+    test_one<polygon_type, polygon_type>("funnelgate3", funnelgate, join_miter, end_flat, 13*13, 3);
+    test_one<polygon_type, polygon_type>("funnelgate4", funnelgate, join_miter, end_flat, 15*15, 4);
+    test_one<polygon_type, polygon_type>("gammagate1", gammagate, join_miter, end_flat, 88, 1);
+    test_one<polygon_type, polygon_type>("fork_a1", fork_a, join_miter, end_flat, 88, 1);
+    test_one<polygon_type, polygon_type>("fork_b1", fork_b, join_miter, end_flat, 154, 1);
+    test_one<polygon_type, polygon_type>("fork_c1", fork_c, join_miter, end_flat, 152, 1);
+    test_one<polygon_type, polygon_type>("triangle", triangle, join_miter, end_flat, 14.6569, 1.0);
 
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("gammagate2", gammagate, 130, 2);
+    test_one<polygon_type, polygon_type>("gammagate2", gammagate, join_miter, end_flat, 130, 2);
 
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("flower1", flower, 67.614, 0.1);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("flower20", flower, 74.894, 0.20);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("flower25", flower, 78.226, 0.25);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("flower30", flower, 81.492494146177947, 0.30);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("flower35", flower, 84.694183819917185, 0.35);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("flower40", flower, 87.8306529577, 0.40);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("flower45", flower, 90.901901559536029, 0.45);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("flower50", flower, 93.907929625415662, 0.50);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("flower55", flower, 96.848737155342079, 0.55);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("flower60", flower, 99.724324149315279, 0.60);
+    test_one<polygon_type, polygon_type>("flower1", flower, join_miter, end_flat, 67.614, 0.1);
+    test_one<polygon_type, polygon_type>("flower20", flower, join_miter, end_flat, 74.894, 0.20);
+    test_one<polygon_type, polygon_type>("flower25", flower, join_miter, end_flat, 78.226, 0.25);
+    test_one<polygon_type, polygon_type>("flower30", flower, join_miter, end_flat, 81.492494146177947, 0.30);
+    test_one<polygon_type, polygon_type>("flower35", flower, join_miter, end_flat, 84.694183819917185, 0.35);
+    test_one<polygon_type, polygon_type>("flower40", flower, join_miter, end_flat, 87.8306529577, 0.40);
+    test_one<polygon_type, polygon_type>("flower45", flower, join_miter, end_flat, 90.901901559536029, 0.45);
+    test_one<polygon_type, polygon_type>("flower50", flower, join_miter, end_flat, 93.907929625415662, 0.50);
+    test_one<polygon_type, polygon_type>("flower55", flower, join_miter, end_flat, 96.848737155342079, 0.55);
+    test_one<polygon_type, polygon_type>("flower60", flower, join_miter, end_flat, 99.724324149315279, 0.60);
 
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("flower10", flower, 67.486, 0.10);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("flower20", flower, 74.702, 0.20);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("flower25", flower, 78.071, 0.25);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("flower30", flower, 81.352, 0.30);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("flower35", flower, 84.547, 0.35);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("flower40", flower, 87.665, 0.40);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("flower45", flower, 90.709, 0.45);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("flower50", flower, 93.680, 0.50);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("flower55", flower, 96.580, 0.55);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("flower60", flower, 99.408, 0.60);
+    test_one<polygon_type, polygon_type>("flower10", flower, join_round, end_flat, 67.486, 0.10);
+    test_one<polygon_type, polygon_type>("flower20", flower, join_round, end_flat, 74.702, 0.20);
+    test_one<polygon_type, polygon_type>("flower25", flower, join_round, end_flat, 78.071, 0.25);
+    test_one<polygon_type, polygon_type>("flower30", flower, join_round, end_flat, 81.352, 0.30);
+    test_one<polygon_type, polygon_type>("flower35", flower, join_round, end_flat, 84.547, 0.35);
+    test_one<polygon_type, polygon_type>("flower40", flower, join_round, end_flat, 87.665, 0.40);
+    test_one<polygon_type, polygon_type>("flower45", flower, join_round, end_flat, 90.709, 0.45);
+    test_one<polygon_type, polygon_type>("flower50", flower, join_round, end_flat, 93.680, 0.50);
+    test_one<polygon_type, polygon_type>("flower55", flower, join_round, end_flat, 96.580, 0.55);
+    test_one<polygon_type, polygon_type>("flower60", flower, join_round, end_flat, 99.408, 0.60);
 
     // Saw
     {
@@ -235,8 +255,8 @@ void test_all()
         {
             std::ostringstream out;
             out << "saw_" << i;
-            test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>(out.str(), saw, expected_round[i - 1], double(i) / 2.0, -999, true, 0.1);
-            test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>(out.str(), saw, expected_miter[i - 1], double(i) / 2.0);
+            test_one<polygon_type, polygon_type>(out.str(), saw, join_round, end_flat, expected_round[i - 1], double(i) / 2.0, -999, true, 0.1);
+            test_one<polygon_type, polygon_type>(out.str(), saw, join_miter, end_flat, expected_miter[i - 1], double(i) / 2.0);
         }
     }
 
@@ -262,50 +282,68 @@ void test_all()
         {
             std::ostringstream out;
             out << "bowl_" << i;
-            test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>(out.str(), bowl, expected_round[i - 1], double(i) / 2.0, -999, true, 0.1);
-            test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>(out.str(), bowl, expected_miter[i - 1], double(i) / 2.0);
+            test_one<polygon_type, polygon_type>(out.str(), bowl, join_round, end_flat, expected_round[i - 1], double(i) / 2.0, -999, true, 0.1);
+            test_one<polygon_type, polygon_type>(out.str(), bowl, join_miter, end_flat, expected_miter[i - 1], double(i) / 2.0);
         }
     }
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("county1", county1, 0.00114092, 0.01);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("county1", county1, 0.00132859, 0.01);
+    test_one<polygon_type, polygon_type>("county1", county1, join_round, end_flat, 0.00114092, 0.01);
+    test_one<polygon_type, polygon_type>("county1", county1, join_miter, end_flat, 0.00132859, 0.01);
 
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("parcel1_10", parcel1, 7571.39121246337891, 10.0);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("parcel1_10", parcel1, 8207.45314788818359, 10.0);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("parcel1_20", parcel1, 11648.0537185668945, 20.0);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("parcel1_20", parcel1, 14184.0223083496094, 20.0);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("parcel1_30", parcel1, 16350.3611068725586, 30.0);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("parcel1_30", parcel1, 22046.5098342895508, 30.0);
+    test_one<polygon_type, polygon_type>("parcel1_10", parcel1, join_round, end_flat, 7571.39121246337891, 10.0);
+    test_one<polygon_type, polygon_type>("parcel1_10", parcel1, join_miter, end_flat, 8207.45314788818359, 10.0);
+    test_one<polygon_type, polygon_type>("parcel1_20", parcel1, join_round, end_flat, 11648.0537185668945, 20.0);
+    test_one<polygon_type, polygon_type>("parcel1_20", parcel1, join_miter, end_flat, 14184.0223083496094, 20.0);
+    test_one<polygon_type, polygon_type>("parcel1_30", parcel1, join_round, end_flat, 16350.3611068725586, 30.0);
+    test_one<polygon_type, polygon_type>("parcel1_30", parcel1, join_miter, end_flat, 22417.8007659912109, 30.0);
 
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("parcel2_10", parcel2, 5000.85063171386719, 10.0);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("parcel2_10", parcel2, 5091.12226867675781, 10.0);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("parcel2_20", parcel2, 9049.60844421386719, 20.0);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("parcel2_20", parcel2, 9410.69154357910156, 20.0);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("parcel2_30", parcel2, 13726.3790588378906, 30.0);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("parcel2_30", parcel2, 14535.2319564819336, 30.0);
+    test_one<polygon_type, polygon_type>("parcel2_10", parcel2, join_round, end_flat, 5000.85063171386719, 10.0);
+    test_one<polygon_type, polygon_type>("parcel2_10", parcel2, join_miter, end_flat, 5091.12226867675781, 10.0);
+    test_one<polygon_type, polygon_type>("parcel2_20", parcel2, join_round, end_flat, 9049.60844421386719, 20.0);
+    test_one<polygon_type, polygon_type>("parcel2_20", parcel2, join_miter, end_flat, 9410.69154357910156, 20.0);
+    test_one<polygon_type, polygon_type>("parcel2_30", parcel2, join_round, end_flat, 13726.3790588378906, 30.0);
+    test_one<polygon_type, polygon_type>("parcel2_30", parcel2, join_miter, end_flat, 14535.2319564819336, 30.0);
 
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("parcel3_10", parcel3, 19992.6824035644531, 10.0);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("parcel3_10", parcel3, 20024.5579376220703, 10.0);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("parcel3_20", parcel3, 34505.0746192932129, 20.0);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("parcel3_20", parcel3, 34633.2606201171875, 20.0);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("parcel3_30", parcel3, 45261.4196014404297, 30.0);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("parcel3_30", parcel3, 45567.3875694274902, 30.0);
+    test_one<polygon_type, polygon_type>("parcel3_10", parcel3, join_round, end_flat, 19992.6824035644531, 10.0);
+    test_one<polygon_type, polygon_type>("parcel3_10", parcel3, join_miter, end_flat, 20024.5579376220703, 10.0);
+    test_one<polygon_type, polygon_type>("parcel3_20", parcel3, join_round, end_flat, 34505.0746192932129, 20.0);
+    test_one<polygon_type, polygon_type>("parcel3_20", parcel3, join_miter, end_flat, 34633.2606201171875, 20.0);
+    test_one<polygon_type, polygon_type>("parcel3_30", parcel3, join_round, end_flat, 45261.4196014404297, 30.0);
+    test_one<polygon_type, polygon_type>("parcel3_30", parcel3, join_miter, end_flat, 45567.3875694274902, 30.0);
 
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("parcel3_bend_10", parcel3_bend, 155.6188, 5.0);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("parcel3_bend_10", parcel3_bend, 458.4187, 10.0);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("parcel3_bend_10", parcel3_bend, 917.9747, 15.0);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("parcel3_bend_10", parcel3_bend, 1534.4795, 20.0);
+    test_one<polygon_type, polygon_type>("parcel3_bend_10", parcel3_bend, join_round, end_flat, 155.6188, 5.0);
+    test_one<polygon_type, polygon_type>("parcel3_bend_10", parcel3_bend, join_round, end_flat, 458.4187, 10.0);
+    test_one<polygon_type, polygon_type>("parcel3_bend_10", parcel3_bend, join_round, end_flat, 917.9747, 15.0);
+    test_one<polygon_type, polygon_type>("parcel3_bend_10", parcel3_bend, join_round, end_flat, 1534.4795, 20.0);
 
 
     // Negative buffers making polygons smaller
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("simplex", simplex, 7.04043, -0.5);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("simplex", simplex, 7.04043, -0.5);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("concave_simplex", concave_simplex, 0.777987, -0.5);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("concave_simplex", concave_simplex, 0.724208, -0.5);
+    test_one<polygon_type, polygon_type>("simplex", simplex, join_round, end_flat, 7.04043, -0.5);
+    test_one<polygon_type, polygon_type>("simplex", simplex, join_miter, end_flat, 7.04043, -0.5);
+    test_one<polygon_type, polygon_type>("concave_simplex", concave_simplex, join_round, end_flat, 0.777987, -0.5);
+    test_one<polygon_type, polygon_type>("concave_simplex", concave_simplex, join_miter, end_flat, 0.724208, -0.5);
 
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("donut_simplex3", donut_simplex, 19.7636, -0.3);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("donut_simplex3", donut_simplex, 19.8861, -0.3);
-    test_one<polygon_type, buf::join_miter, buf::end_flat, polygon_type>("donut_simplex6", donut_simplex, 12.8920, -0.6);
-    test_one<polygon_type, buf::join_round, buf::end_flat, polygon_type>("donut_simplex6", donut_simplex, 12.9157, -0.6);
+    test_one<polygon_type, polygon_type>("donut_simplex3", donut_simplex, join_miter, end_flat, 19.7636, -0.3);
+    test_one<polygon_type, polygon_type>("donut_simplex3", donut_simplex, join_round, end_flat, 19.8861, -0.3);
+    test_one<polygon_type, polygon_type>("donut_simplex6", donut_simplex, join_miter, end_flat, 12.8920, -0.6);
+    test_one<polygon_type, polygon_type>("donut_simplex6", donut_simplex, join_round, end_flat, 12.9157, -0.6);
+
+    test_one<polygon_type, polygon_type>("ticket_10398_1_5", ticket_10398_1, join_miter, end_flat, 494.7192, 0.5, -999, false);
+    test_one<polygon_type, polygon_type>("ticket_10398_1_25", ticket_10398_1, join_miter, end_flat, 697.7798, 2.5, -999, false);
+    test_one<polygon_type, polygon_type>("ticket_10398_1_84", ticket_10398_1, join_miter, end_flat, 1470.8096, 8.4, -999, false);
+
+    test_one<polygon_type, polygon_type>("ticket_10398_2_45", ticket_10398_2, join_miter, end_flat, 535.4780, 4.5, -999, false);
+    test_one<polygon_type, polygon_type>("ticket_10398_2_62", ticket_10398_2, join_miter, end_flat, 705.2046, 6.2, -999, false);
+    test_one<polygon_type, polygon_type>("ticket_10398_2_73", ticket_10398_2, join_miter, end_flat, 827.3394, 7.3, -999, false);
+
+    test_one<polygon_type, polygon_type>("ticket_10398_3_12", ticket_10398_3, join_miter, end_flat, 122.9443, 1.2, -999, false);
+    test_one<polygon_type, polygon_type>("ticket_10398_3_35", ticket_10398_3, join_miter, end_flat, 258.2729, 3.5, -999, false);
+    test_one<polygon_type, polygon_type>("ticket_10398_3_54", ticket_10398_3, join_miter, end_flat, 402.0571, 5.4, -999, false);
+
+    test_one<polygon_type, polygon_type>("ticket_10398_4_30", ticket_10398_4, join_miter, end_flat, 257.9482, 3.0, -999, false);
+    test_one<polygon_type, polygon_type>("ticket_10398_4_66", ticket_10398_4, join_miter, end_flat, 553.0112, 6.6, -999, false);
+    test_one<polygon_type, polygon_type>("ticket_10398_4_91", ticket_10398_4, join_miter, end_flat, 819.1406, 9.1, -999, false);
+
+    test_one<polygon_type, polygon_type>("ticket_10412", ticket_10412, join_miter, end_flat, 3109.6616, 1.5, -999, false);
 }
 
 

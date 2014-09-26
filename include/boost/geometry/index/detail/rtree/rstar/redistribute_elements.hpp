@@ -113,19 +113,28 @@ struct choose_split_axis_and_index_for_corner
         // copy elements
         Elements elements_copy(elements);                                                                       // MAY THROW, STRONG (alloc, copy)
         
+        size_t const index_first = parameters.get_min_elements();
+        size_t const index_last = parameters.get_max_elements() - parameters.get_min_elements() + 2;
+
         // sort elements
         element_axis_corner_less<element_type, Translator, indexable_tag, Corner, AxisIndex> elements_less(translator);
         std::sort(elements_copy.begin(), elements_copy.end(), elements_less);                                   // MAY THROW, BASIC (copy)
+//        {
+//            typename Elements::iterator f = elements_copy.begin() + index_first;
+//            typename Elements::iterator l = elements_copy.begin() + index_last;
+//            std::nth_element(elements_copy.begin(), f, elements_copy.end(), elements_less);                   // MAY THROW, BASIC (copy)
+//            std::nth_element(f, l, elements_copy.end(), elements_less);                                       // MAY THROW, BASIC (copy)
+//            std::sort(f, l, elements_less);                                                                   // MAY THROW, BASIC (copy)
+//        }
 
         // init outputs
-        choosen_index = parameters.get_min_elements();
+        choosen_index = index_first;
         sum_of_margins = 0;
         smallest_overlap = (std::numeric_limits<content_type>::max)();
         smallest_content = (std::numeric_limits<content_type>::max)();
 
         // calculate sum of margins for all distributions
-        size_t index_last = parameters.get_max_elements() - parameters.get_min_elements() + 2;
-        for ( size_t i = parameters.get_min_elements() ; i < index_last ; ++i )
+        for ( size_t i = index_first ; i < index_last ; ++i )
         {
             // TODO - awulkiew: may be optimized - box of group 1 may be initialized with
             // box of min_elems number of elements and expanded for each iteration by another element
@@ -320,50 +329,39 @@ struct choose_split_axis_and_index<Parameters, Box, 1>
     }
 };
 
-template <size_t Corner, size_t Dimension>
-struct partial_sort
+template <size_t Corner, size_t Dimension, size_t I = 0>
+struct nth_element
 {
     BOOST_STATIC_ASSERT(0 < Dimension);
+    BOOST_STATIC_ASSERT(I < Dimension);
 
     template <typename Elements, typename Translator>
     static inline void apply(Elements & elements, const size_t axis, const size_t index, Translator const& tr)
     {
-        if ( axis < Dimension - 1 )
+        //BOOST_GEOMETRY_INDEX_ASSERT(axis < Dimension, "unexpected axis value");
+
+        if ( axis != I )
         {
-            partial_sort<Corner, Dimension - 1>::apply(elements, axis, index, tr);                          // MAY THROW, BASIC (copy)
+            nth_element<Corner, Dimension, I + 1>::apply(elements, axis, index, tr);                          // MAY THROW, BASIC (copy)
         }
         else
         {
-            BOOST_GEOMETRY_INDEX_ASSERT(axis == Dimension - 1, "unexpected axis value");
-
             typedef typename Elements::value_type element_type;
             typedef typename rtree::element_indexable_type<element_type, Translator>::type indexable_type;
             typedef typename tag<indexable_type>::type indexable_tag;
 
-            element_axis_corner_less<element_type, Translator, indexable_tag, Corner, Dimension - 1> less(tr);
-            std::partial_sort(elements.begin(), elements.begin() + index, elements.end(), less);            // MAY THROW, BASIC (copy)
+            element_axis_corner_less<element_type, Translator, indexable_tag, Corner, I> less(tr);
+            std::nth_element(elements.begin(), elements.begin() + index, elements.end(), less);            // MAY THROW, BASIC (copy)
         }
     }
 };
 
-template <size_t Corner>
-struct partial_sort<Corner, 1>
+template <size_t Corner, size_t Dimension>
+struct nth_element<Corner, Dimension, Dimension>
 {
     template <typename Elements, typename Translator>
-    static inline void apply(Elements & elements,
-                             const size_t BOOST_GEOMETRY_INDEX_ASSERT_UNUSED_PARAM(axis),
-                             const size_t index,
-                             Translator const& tr)
-    {
-        BOOST_GEOMETRY_INDEX_ASSERT(axis == 0, "unexpected axis value");
-
-        typedef typename Elements::value_type element_type;
-        typedef typename rtree::element_indexable_type<element_type, Translator>::type indexable_type;
-        typedef typename tag<indexable_type>::type indexable_tag;
-
-        element_axis_corner_less<element_type, Translator, indexable_tag, Corner, 0> less(tr);
-        std::partial_sort(elements.begin(), elements.begin() + index, elements.end(), less);                // MAY THROW, BASIC (copy)
-    }
+    static inline void apply(Elements & /*elements*/, const size_t /*axis*/, const size_t /*index*/, Translator const& /*tr*/)
+    {}
 };
 
 } // namespace rstar
@@ -397,6 +395,11 @@ struct redistribute_elements<Value, Options, Translator, Box, Allocators, rstar_
         elements_type & elements1 = rtree::elements(n);
         elements_type & elements2 = rtree::elements(second_node);
 
+        // copy original elements
+        // TODO: use container_from_elements_type for std::allocator
+        elements_type elements_copy(elements1);                                                         // MAY THROW, STRONG
+        elements_type elements_backup(elements1);                                                       // MAY THROW, STRONG
+
         size_t split_axis = 0;
         size_t split_corner = 0;
         size_t split_index = parameters.get_min_elements();
@@ -404,34 +407,34 @@ struct redistribute_elements<Value, Options, Translator, Box, Allocators, rstar_
         content_type smallest_overlap = (std::numeric_limits<content_type>::max)();
         content_type smallest_content = (std::numeric_limits<content_type>::max)();
 
+        // NOTE: this function internally copies passed elements
+        //       why not pass mutable elements and use the same container for all axes/corners
+        //       and again, the same below calling partial_sort/nth_element
+        //       It would be even possible to not re-sort/find nth_element if the axis/corner
+        //       was found for the last sorting - last combination of axis/corner
         rstar::choose_split_axis_and_index<
             typename Options::parameters_type,
             Box,
             dimension
-        >::apply(elements1,
+        >::apply(elements_copy,
                  split_axis, split_corner, split_index,
                  smallest_sum_of_margins, smallest_overlap, smallest_content,
                  parameters, translator);                                                               // MAY THROW, STRONG
 
         // TODO: awulkiew - get rid of following static_casts?
-
         BOOST_GEOMETRY_INDEX_ASSERT(split_axis < dimension, "unexpected value");
         BOOST_GEOMETRY_INDEX_ASSERT(split_corner == static_cast<size_t>(min_corner) || split_corner == static_cast<size_t>(max_corner), "unexpected value");
         BOOST_GEOMETRY_INDEX_ASSERT(parameters.get_min_elements() <= split_index && split_index <= parameters.get_max_elements() - parameters.get_min_elements() + 1, "unexpected value");
-        
-        // copy original elements
-        elements_type elements_copy(elements1);                                                         // MAY THROW, STRONG
-        elements_type elements_backup(elements1);                                                       // MAY THROW, STRONG
 
-        // TODO: awulkiew - check if std::partial_sort produces the same result as std::sort
+        // TODO: consider using nth_element
         if ( split_corner == static_cast<size_t>(min_corner) )
         {
-            rstar::partial_sort<min_corner, dimension>
+            rstar::nth_element<min_corner, dimension>
                 ::apply(elements_copy, split_axis, split_index, translator);                            // MAY THROW, BASIC (copy)
         }
         else
         {
-            rstar::partial_sort<max_corner, dimension>
+            rstar::nth_element<max_corner, dimension>
                 ::apply(elements_copy, split_axis, split_index, translator);                            // MAY THROW, BASIC (copy)
         }
 

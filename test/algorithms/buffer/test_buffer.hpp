@@ -1,7 +1,7 @@
 // Boost.Geometry (aka GGL, Generic Geometry Library)
 // Unit Test
 
-// Copyright (c) 2010-2012 Barend Gehrels, Amsterdam, the Netherlands.
+// Copyright (c) 2010-2014 Barend Gehrels, Amsterdam, the Netherlands.
 // Use, modification and distribution is subject to the Boost Software License,
 // Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -10,9 +10,13 @@
 #ifndef BOOST_GEOMETRY_TEST_BUFFER_HPP
 #define BOOST_GEOMETRY_TEST_BUFFER_HPP
 
-
+#include <iostream>
 #include <fstream>
 #include <iomanip>
+
+#if defined(TEST_WITH_SVG)
+#define BOOST_GEOMETRY_BUFFER_USE_HELPER_POINTS
+#endif
 
 #include <boost/foreach.hpp>
 #include <geometry_test_common.hpp>
@@ -111,15 +115,20 @@ struct svg_visitor
 
         std::map<robust_point_type, int, bg::less<robust_point_type> > offsets;
 
+        int index = 0;
         for (typename boost::range_iterator<Turns const>::type it =
-            boost::begin(turns); it != boost::end(turns); ++it)
+            boost::begin(turns); it != boost::end(turns); ++it, index++)
         {
             char color = 'g';
             std::string fill = "fill:rgb(0,255,0);";
             switch(it->location)
             {
-                case bgdb::inside_buffer : fill = "fill:rgb(255,0,0);"; color = 'r'; break;
+                case bgdb::inside_buffer : fill = "fill:rgb(255,0,0);"; color = 'r'; break; // does not happen anymore
                 case bgdb::inside_original : fill = "fill:rgb(0,0,255);"; color = 'b'; break;
+            }
+            if (!it->selectable_start)
+            {
+                fill = "fill:rgb(255,192,0);"; color = 'o'; // orange
             }
             if (it->blocked())
             {
@@ -128,23 +137,38 @@ struct svg_visitor
 
             fill += "fill-opacity:0.7;";
             std::ostringstream out;
-            out << it->operations[0].piece_index << "/" << it->operations[1].piece_index
+            out << index
+                << " " << it->operations[0].piece_index << "/" << it->operations[1].piece_index
                 << " " << si(it->operations[0].seg_id) << "/" << si(it->operations[1].seg_id)
+
+//              If you want to see travel information
+                << std::endl
+                << " nxt " << it->operations[0].enriched.travels_to_ip_index
+                << "/" << it->operations[1].enriched.travels_to_ip_index
+                << " or " << it->operations[0].enriched.next_ip_index
+                << "/" << it->operations[1].enriched.next_ip_index
+                //<< " frac " << it->operations[0].fraction
+
+//                If you want to see robust-point coordinates (e.g. to find duplicates)
+//                << std::endl
+//                << " " << bg::get<0>(it->robust_point) << " , " << bg::get<1>(it->robust_point)
+
                 << std::endl;
             out << " " << bg::method_char(it->method)
                 << ":" << bg::operation_char(it->operations[0].operation)
                 << "/" << bg::operation_char(it->operations[1].operation);
-            out << " " << (it->count_within > 0 ? "w" : "")
-                << (it->count_on_multi > 0 ? "m" : "")
-                << (it->count_on_occupied > 0 ? "o" : "")
+            out << " "
                 << (it->count_on_offsetted > 0 ? "b" : "") // b: offsetted border
+                << (it->count_within_near_offsetted > 0 ? "n" : "")
+                << (it->count_within > 0 ? "w" : "")
                 << (it->count_on_helper > 0 ? "h" : "")
+                << (it->count_on_multi > 0 ? "m" : "")
                 ;
 
             offsets[it->get_robust_point()] += 10;
             int offset = offsets[it->get_robust_point()];
 
-            m_mapper.map(it->point, fill, 6);
+            m_mapper.map(it->point, fill, 4);
             m_mapper.text(it->point, out.str(), "fill:rgb(0,0,0);font-family='Arial';font-size:9px;", 5, offset);
 
             offsets[it->get_robust_point()] += 25;
@@ -154,7 +178,7 @@ struct svg_visitor
     template <typename Pieces, typename OffsettedRings>
     inline void map_pieces(Pieces const& pieces,
                 OffsettedRings const& offsetted_rings,
-                bool do_pieces = true, bool do_indices = true)
+                bool do_pieces, bool do_indices)
     {
         typedef typename boost::range_value<Pieces const>::type piece_type;
         typedef typename boost::range_value<OffsettedRings const>::type ring_type;
@@ -178,8 +202,8 @@ struct svg_visitor
             std::copy(boost::begin(ring) + seg_id.segment_index,
                     boost::begin(ring) + piece.last_segment_index,
                     std::back_inserter(corner));
-            std::copy(boost::begin(piece.helper_segments),
-                    boost::end(piece.helper_segments),
+            std::copy(boost::begin(piece.helper_points),
+                    boost::end(piece.helper_points),
                     std::back_inserter(corner));
 
             if (corner.empty())
@@ -203,7 +227,14 @@ struct svg_visitor
 
                 std::ostringstream out;
                 out << piece.index << "/" << int(piece.type) << "/" << piece.first_seg_id.segment_index << ".." << piece.last_segment_index - 1;
-                m_mapper.text(corner.front(), out.str(), "fill:rgb(255,0,0);font-family='Arial';font-size:10px;", 5, 5);
+                point_type label_point = corner.front();
+                int const mid_offset = piece.offsetted_count / 2 - 1;
+                if (mid_offset >= 0 && mid_offset + 1 < corner.size())
+                {
+                    bg::set<0>(label_point, (bg::get<0>(corner[mid_offset]) + bg::get<0>(corner[mid_offset + 1])) / 2.0);
+                    bg::set<1>(label_point, (bg::get<1>(corner[mid_offset]) + bg::get<1>(corner[mid_offset + 1])) / 2.0);
+                }
+                m_mapper.text(label_point, out.str(), "fill:rgb(255,0,0);font-family='Arial';font-size:10px;", 5, 5);
             }
         }
     }
@@ -240,7 +271,7 @@ struct svg_visitor
     {
         if(phase == 0)
         {
-            map_pieces(collection.m_pieces, collection.offsetted_rings);
+            map_pieces(collection.m_pieces, collection.offsetted_rings, true, true);
             map_turns(collection.m_turns);
         }
         if (phase == 1)
@@ -318,6 +349,7 @@ template
     typename Geometry
 >
 void test_buffer(std::string const& caseid, Geometry const& geometry,
+            JoinStrategy const& join_strategy, EndStrategy const& end_strategy,
             bool check_self_intersections, double expected_area,
             double distance_left, double distance_right,
             double tolerance,
@@ -339,12 +371,13 @@ void test_buffer(std::string const& caseid, Geometry const& geometry,
         : ""
         ;
 
-    typedef typename bg::point_type<GeometryOut>::type output_point_type;
-
     if (distance_right < -998)
     {
         distance_right = distance_left;
     }
+
+    bg::model::box<point_type> envelope;
+    bg::envelope(geometry, envelope);
 
     std::string join_name = JoinTestProperties<JoinStrategy>::name();
     std::string end_name = EndTestProperties<EndStrategy>::name();
@@ -377,10 +410,9 @@ void test_buffer(std::string const& caseid, Geometry const& geometry,
     mapper_type mapper(svg, 1000, 1000);
 
     {
-        bg::model::box<point_type> box;
-        bg::envelope(geometry, box);
         double d = std::abs(distance_left) + std::abs(distance_right);
 
+        bg::model::box<point_type> box = envelope;
         bg::buffer(box, box, d * (join_name == "miter" ? 2.0 : 1.1));
         mapper.add(box);
     }
@@ -390,29 +422,28 @@ void test_buffer(std::string const& caseid, Geometry const& geometry,
     bg::detail::buffer::visit_pieces_default_policy visitor;
 #endif
 
-    JoinStrategy join_strategy;
-
-    EndStrategy end_strategy;
-
     bg::strategy::buffer::distance_asymmetric
         <
             coordinate_type
         > 
     distance_strategy(distance_left, distance_right);
 
-    bg::strategy::buffer::buffer_side side_strategy;
+    bg::strategy::buffer::side_straight side_strategy;
 
     // For (multi)points a buffer with 88 points is used for testing.
     // More points will give a more precise result - expected area should be
     // adapted then
-    bg::strategy::buffer::buffer_circle circle_strategy(88);
+    bg::strategy::buffer::point_circle circle_strategy(88);
 
     typedef typename bg::point_type<Geometry>::type point_type;
     typedef typename bg::rescale_policy_type<point_type>::type
         rescale_policy_type;
 
+    // Enlarge the box to get a proper rescale policy
+    bg::buffer(envelope, envelope, distance_strategy.max_distance(join_strategy, end_strategy));
+
     rescale_policy_type rescale_policy
-            = bg::get_rescale_policy<rescale_policy_type>(geometry);
+            = bg::get_rescale_policy<rescale_policy_type>(envelope);
 
     std::vector<GeometryOut> buffered;
 
@@ -469,8 +500,20 @@ void test_buffer(std::string const& caseid, Geometry const& geometry,
     }
 
 #if defined(TEST_WITH_SVG)
+    bool const areal = boost::is_same
+        <
+            typename bg::tag_cast<tag, bg::areal_tag>::type, bg::areal_tag
+        >::type::value;
+
     // Map input geometry in green
-    mapper.map(geometry, "opacity:0.5;fill:rgb(0,128,0);stroke:rgb(0,128,0);stroke-width:10");
+    if (areal)
+    {
+        mapper.map(geometry, "opacity:0.5;fill:rgb(0,128,0);stroke:rgb(0,128,0);stroke-width:2");
+    }
+    else
+    {
+        mapper.map(geometry, "opacity:0.5;stroke:rgb(0,128,0);stroke-width:10");
+    }
 
     BOOST_FOREACH(GeometryOut const& polygon, buffered)
     {
@@ -484,10 +527,18 @@ void test_buffer(std::string const& caseid, Geometry const& geometry,
         std::size_t count = 0;
         BOOST_FOREACH(GeometryOut const& polygon, buffered)
         {
-            count += count_self_ips(polygon, rescale_policy);
+            if (bg::detail::overlay::has_self_intersections(polygon,
+                    rescale_policy, false))
+            {
+                count += count_self_ips(polygon, rescale_policy);
+            }
         }
 
         *self_ip_count += count;
+        if (count > 0)
+        {
+            std::cout << complete.str() << " " << count << std::endl;
+        }
     }
 }
 
@@ -499,11 +550,12 @@ static int counter = 0;
 template
 <
     typename Geometry,
+    typename GeometryOut,
     typename JoinStrategy,
-    typename EndStrategy,
-    typename GeometryOut
+    typename EndStrategy
 >
 void test_one(std::string const& caseid, std::string const& wkt,
+        JoinStrategy const& join_strategy, EndStrategy const& end_strategy,
         double expected_area,
         double distance_left, double distance_right = -999,
         bool check_self_intersections = true,
@@ -527,8 +579,9 @@ void test_one(std::string const& caseid, std::string const& wkt,
         << std::endl;
 #endif
 
-    test_buffer<GeometryOut, JoinStrategy, EndStrategy>
-            (caseid, g, check_self_intersections, expected_area,
+    test_buffer<GeometryOut>
+            (caseid, g, join_strategy, end_strategy,
+            check_self_intersections, expected_area,
             distance_left, distance_right, tolerance, NULL);
 }
 
@@ -536,11 +589,12 @@ void test_one(std::string const& caseid, std::string const& wkt,
 template
 <
     typename Geometry,
+    typename GeometryOut,
     typename JoinStrategy,
-    typename EndStrategy,
-    typename GeometryOut
+    typename EndStrategy
 >
 void test_one(std::string const& caseid, std::string const& wkt,
+        JoinStrategy const& join_strategy, EndStrategy const& end_strategy,
         double expected_area,
         double distance_left, double distance_right,
         std::size_t& self_ip_count,
@@ -551,8 +605,8 @@ void test_one(std::string const& caseid, std::string const& wkt,
     bg::read_wkt(wkt, g);
     bg::correct(g);
 
-    test_buffer<GeometryOut, JoinStrategy, EndStrategy>
-            (caseid, g, false, expected_area,
+    test_buffer<GeometryOut>(caseid, g, join_strategy, end_strategy,
+            false, expected_area,
             distance_left, distance_right, tolerance, &self_ip_count);
 }
 
