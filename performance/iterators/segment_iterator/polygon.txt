@@ -1,0 +1,61 @@
+mkaravel@mkaravel-gr:~/bg-mixed/performance/iterators/segment_iterator$ ./polygon ../../generators/ggp100.cin
+POLY # of points (bg::num_points): 250
+# of segments (bg::num_segments) = 200
+
+ 0.000029s wall, 0.000000s user + 0.000000s system = 0.000000s CPU (n/a%)
+# of segments (get_segments) = 200
+
+ 0.000017s wall, 0.000000s user + 0.000000s system = 0.000000s CPU (n/a%)
+# of segments (segment_iterator) = 200
+
+mkaravel@mkaravel-gr:~/bg-mixed/performance/iterators/segment_iterator$ ./polygon ../../generators/ggp1000.cin
+POLY # of points (bg::num_points): 2500
+# of segments (bg::num_segments) = 2000
+
+ 0.000288s wall, 0.000000s user + 0.000000s system = 0.000000s CPU (n/a%)
+# of segments (get_segments) = 2000
+
+ 0.000241s wall, 0.000000s user + 0.000000s system = 0.000000s CPU (n/a%)
+# of segments (segment_iterator) = 2000
+
+mkaravel@mkaravel-gr:~/bg-mixed/performance/iterators/segment_iterator$ ./polygon ../../generators/ggp10000.cin
+POLY # of points (bg::num_points): 25000
+# of segments (bg::num_segments) = 20000
+
+ 0.002500s wall, 0.010000s user + 0.000000s system = 0.010000s CPU (400.0%)
+# of segments (get_segments) = 20000
+
+ 0.002684s wall, 0.000000s user + 0.000000s system = 0.000000s CPU (n/a%)
+# of segments (segment_iterator) = 20000
+
+mkaravel@mkaravel-gr:~/bg-mixed/performance/iterators/segment_iterator$ ./polygon ../../generators/ggp100000.cin
+POLY # of points (bg::num_points): 250000
+# of segments (bg::num_segments) = 200000
+
+ 0.033020s wall, 0.020000s user + 0.010000s system = 0.030000s CPU (90.9%)
+# of segments (get_segments) = 200000
+
+ 0.035189s wall, 0.010000s user + 0.030000s system = 0.040000s CPU (113.7%)
+# of segments (segment_iterator) = 200000
+
+mkaravel@mkaravel-gr:~/bg-mixed/performance/iterators/segment_iterator$ ./polygon ../../generators/ggp1000000.cin
+POLY # of points (bg::num_points): 2500000
+# of segments (bg::num_segments) = 2000000
+
+ 0.228691s wall, 0.130000s user + 0.090000s system = 0.220000s CPU (96.2%)
+# of segments (get_segments) = 2000000
+
+ 0.213961s wall, 0.120000s user + 0.100000s system = 0.220000s CPU (102.8%)
+# of segments (segment_iterator) = 2000000
+
+mkaravel@mkaravel-gr:~/bg-mixed/performance/iterators/segment_iterator$ ./polygon ../../generators/ggp10000000.cin
+POLY # of points (bg::num_points): 25000000
+# of segments (bg::num_segments) = 20000000
+
+ 3.227438s wall, 1.180000s user + 2.020000s system = 3.200000s CPU (99.1%)
+# of segments (get_segments) = 20000000
+
+ 3.278189s wall, 1.280000s user + 1.990000s system = 3.270000s CPU (99.8%)
+# of segments (segment_iterator) = 20000000
+
+
