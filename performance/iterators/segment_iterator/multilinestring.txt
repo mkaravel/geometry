@@ -1,73 +1,3 @@
-mkaravel@mkaravel-gr:~/bg-mixed/performance/iterators/segment_iterator$ ./linestring ../../generators/rpb/100-100.cin 
-LS size: 100
-# of segments (bg::num_segments) = 99
-
- 0.000035s wall, 0.000000s user + 0.000000s system = 0.000000s CPU (n/a%)
-# of segments (get_segments) = 99
-
- 0.000027s wall, 0.000000s user + 0.000000s system = 0.000000s CPU (n/a%)
-# of segments (segment_iterator) = 99
-
-mkaravel@mkaravel-gr:~/bg-mixed/performance/iterators/segment_iterator$ ./linestring ../../generators/rpb/1000-1000.cin 
-LS size: 1000
-# of segments (bg::num_segments) = 999
-
- 0.000140s wall, 0.000000s user + 0.000000s system = 0.000000s CPU (n/a%)
-# of segments (get_segments) = 999
-
- 0.000122s wall, 0.000000s user + 0.000000s system = 0.000000s CPU (n/a%)
-# of segments (segment_iterator) = 999
-
-mkaravel@mkaravel-gr:~/bg-mixed/performance/iterators/segment_iterator$ ./linestring ../../generators/rpb/10000-10000.cin 
-LS size: 10000
-# of segments (bg::num_segments) = 9999
-
- 0.001369s wall, 0.000000s user + 0.000000s system = 0.000000s CPU (n/a%)
-# of segments (get_segments) = 9999
-
- 0.001596s wall, 0.000000s user + 0.000000s system = 0.000000s CPU (n/a%)
-# of segments (segment_iterator) = 9999
-
-mkaravel@mkaravel-gr:~/bg-mixed/performance/iterators/segment_iterator$ ./linestring ../../generators/rpb/100000-100000.cin 
-LS size: 100000
-# of segments (bg::num_segments) = 99999
-
- 0.013583s wall, 0.000000s user + 0.010000s system = 0.010000s CPU (73.6%)
-# of segments (get_segments) = 99999
-
- 0.013496s wall, 0.010000s user + 0.010000s system = 0.020000s CPU (148.2%)
-# of segments (segment_iterator) = 99999
-
-mkaravel@mkaravel-gr:~/bg-mixed/performance/iterators/segment_iterator$ ./linestring ../../generators/rpb/1000000-1000000.cin 
-LS size: 1000000
-# of segments (bg::num_segments) = 999999
-
- 0.122989s wall, 0.040000s user + 0.090000s system = 0.130000s CPU (105.7%)
-# of segments (get_segments) = 999999
-
- 0.121532s wall, 0.050000s user + 0.070000s system = 0.120000s CPU (98.7%)
-# of segments (segment_iterator) = 999999
-
-mkaravel@mkaravel-gr:~/bg-mixed/performance/iterators/segment_iterator$ ./linestring ../../generators/rpb/10000000-10000000.cin 
-LS size: 10000000
-# of segments (bg::num_segments) = 9999999
-
- 1.515166s wall, 0.540000s user + 0.970000s system = 1.510000s CPU (99.7%)
-# of segments (get_segments) = 9999999
-
- 1.514365s wall, 0.670000s user + 0.840000s system = 1.510000s CPU (99.7%)
-# of segments (segment_iterator) = 9999999
-
-mkaravel@mkaravel-gr:~/bg-mixed/performance/iterators/segment_iterator$ ./linestring ../../generators/rpb/100000000-1.cin 
-LS size: 100000000
-# of segments (bg::num_segments) = 99999999
-
- 13.303213s wall, 4.990000s user + 8.240000s system = 13.230000s CPU (99.4%)
-# of segments (get_segments) = 99999999
-
- 13.284014s wall, 5.180000s user + 8.060000s system = 13.240000s CPU (99.7%)
-# of segments (segment_iterator) = 99999999
-
 mkaravel@mkaravel-gr:~/bg-mixed/performance/iterators/segment_iterator$ ./multilinestring ../../generators/rsb/100-100.cin 
 MLS size: 100
 # of segments (bg::num_segments) = 100
@@ -137,5 +67,4 @@ MLS size: 100000000
 
  16.862996s wall, 6.190000s user + 10.530000s system = 16.720000s CPU (99.2%)
 # of segments (segment_iterator) = 100000000
-
 
