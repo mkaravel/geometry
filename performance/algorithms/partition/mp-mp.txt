@@ -1,0 +1,116 @@
+mkaravel@mkaravel-gr:~/bg-mixed/performance/algorithms/partition$ ./mp-mp ../../generators/rpb/1000-1000.cin
+MP1 size: 1000
+MP2 size: 1000
+checking old partition (one collection)...
+ 0.000618s wall, 0.000000s user + 0.000000s system = 0.000000s CPU (n/a%)
+computed distance = 0.001266010848752654
+
+
+checking new partition (one collection)...
+ 0.000585s wall, 0.000000s user + 0.000000s system = 0.000000s CPU (n/a%)
+computed distance = 0.001266010848752654
+
+
+checking old partition (two collections)...
+ 0.001106s wall, 0.000000s user + 0.000000s system = 0.000000s CPU (n/a%)
+computed distance = 0.0001311640438361883
+
+
+checking new partition (two collections)...
+ 0.000997s wall, 0.000000s user + 0.000000s system = 0.000000s CPU (n/a%)
+computed distance = 0.0001311640438361883
+
+
+mkaravel@mkaravel-gr:~/bg-mixed/performance/algorithms/partition$ ./mp-mp ../../generators/rpb/10000-10000.cin
+MP1 size: 10000
+MP2 size: 10000
+checking old partition (one collection)...
+ 0.002773s wall, 0.010000s user + 0.000000s system = 0.010000s CPU (360.6%)
+computed distance = 7.055662702960193e-05
+
+
+checking new partition (one collection)...
+ 0.002450s wall, 0.000000s user + 0.000000s system = 0.000000s CPU (n/a%)
+computed distance = 7.055662702960193e-05
+
+
+checking old partition (two collections)...
+ 0.005468s wall, 0.000000s user + 0.000000s system = 0.000000s CPU (n/a%)
+computed distance = 3.215903701307544e-05
+
+
+checking new partition (two collections)...
+ 0.005185s wall, 0.010000s user + 0.000000s system = 0.010000s CPU (192.9%)
+computed distance = 3.215903701307544e-05
+
+
+mkaravel@mkaravel-gr:~/bg-mixed/performance/algorithms/partition$ ./mp-mp ../../generators/rpb/100000-100000.cin
+MP1 size: 100000
+MP2 size: 100000
+checking old partition (one collection)...
+ 0.035126s wall, 0.040000s user + 0.000000s system = 0.040000s CPU (113.9%)
+computed distance = 7.752738879164683e-06
+
+
+checking new partition (one collection)...
+ 0.036622s wall, 0.030000s user + 0.000000s system = 0.030000s CPU (81.9%)
+computed distance = 7.752738879164683e-06
+
+
+checking old partition (two collections)...
+ 0.076411s wall, 0.070000s user + 0.010000s system = 0.080000s CPU (104.7%)
+computed distance = 3.798321939459541e-06
+
+
+checking new partition (two collections)...
+ 0.065967s wall, 0.070000s user + 0.000000s system = 0.070000s CPU (106.1%)
+computed distance = 3.798321939459541e-06
+
+
+mkaravel@mkaravel-gr:~/bg-mixed/performance/algorithms/partition$ ./mp-mp ../../generators/rpb/1000000-1000000.cin
+MP1 size: 1000000
+MP2 size: 1000000
+checking old partition (one collection)...
+ 0.431059s wall, 0.430000s user + 0.000000s system = 0.430000s CPU (99.8%)
+computed distance = 5.632095790054446e-07
+
+
+checking new partition (one collection)...
+ 0.394527s wall, 0.390000s user + 0.010000s system = 0.400000s CPU (101.4%)
+computed distance = 5.632095790054446e-07
+
+
+checking old partition (two collections)...
+ 0.849864s wall, 0.840000s user + 0.000000s system = 0.840000s CPU (98.8%)
+computed distance = 2.26181039629857e-07
+
+
+checking new partition (two collections)...
+ 0.813731s wall, 0.810000s user + 0.010000s system = 0.820000s CPU (100.8%)
+computed distance = 2.26181039629857e-07
+
+
+mkaravel@mkaravel-gr:~/bg-mixed/performance/algorithms/partition$ ./mp-mp ../../generators/rpb/10000000-10000000.cin
+MP1 size: 10000000
+MP2 size: 10000000
+checking old partition (one collection)...
+ 5.861453s wall, 5.710000s user + 0.140000s system = 5.850000s CPU (99.8%)
+computed distance = 6.706815921082599e-08
+
+
+checking new partition (one collection)...
+ 5.680503s wall, 5.600000s user + 0.080000s system = 5.680000s CPU (100.0%)
+computed distance = 6.706815921082599e-08
+
+
+checking old partition (two collections)...
+ 12.670377s wall, 12.440000s user + 0.220000s system = 12.660000s CPU (99.9%)
+computed distance = 9.47629301950971e-08
+
+
+checking new partition (two collections)...
+ 12.326983s wall, 12.120000s user + 0.200000s system = 12.320000s CPU (99.9%)
+computed distance = 9.47629301950971e-08
+
+
+
