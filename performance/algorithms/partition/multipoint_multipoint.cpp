@@ -98,33 +98,6 @@ private:
 
 // structs for partition -- end
 
-#if 0
-template <typename Linear>
-class segment_range
-{
-public:
-    typedef bg::segment_iterator<Linear const> const_iterator;
-    typedef const_iterator iterator;
-
-    segment_range(Linear const& linear)
-        : m_linear(linear)
-    {}
-
-    const_iterator begin() const
-    {
-        return bg::segments_begin(m_linear);
-    }
-
-    const_iterator end() const
-    {
-        return geometry::segments_end(m_linear);
-    }
-
-private:
-    Linear const& m_linear;
-};
-#endif
-
 
 int main(int argc, char** argv)
 {
