@@ -338,6 +338,43 @@ struct multi_point_parser
     }
 };
 
+template <typename Multi, typename ItemParser>
+struct multi_parser
+{
+    template <typename Iterator>
+    static bool parse(Iterator& it, Iterator end, Multi& multi,
+                byte_order_type::enum_t order)
+    {
+        if (!geometry_type_parser<Multi>::parse(it, end, order))
+        {
+            return false;
+        }
+
+        boost::uint32_t num_items(0);
+        if (!value_parser<boost::uint32_t>::parse(it, end, num_items, order))
+        {
+            return false;
+        }
+
+        std::size_t items_parsed = 0;
+        while (items_parsed < num_items && it != end)
+        {
+            byte_order_type::enum_t item_order;
+            if (!byte_order_parser::parse(it, end, item_order))
+            {
+                return false;
+            }
+            boost::geometry::range::resize(multi, items_parsed + 1);
+            if (!ItemParser::parse(it, end, boost::geometry::range::back(multi), item_order))
+            {
+                return false;
+            }
+            ++items_parsed;
+        }
+        return true;
+    }
+};
+
 template <typename MultiLinestring>
 struct multi_linestring_parser
 {
@@ -345,33 +382,22 @@ struct multi_linestring_parser
     static bool parse(Iterator& it, Iterator end, MultiLinestring& multi_linestring,
                 byte_order_type::enum_t order)
     {
-        if (!geometry_type_parser<MultiLinestring>::parse(it, end, order))
-        {
-            return false;
-        }
-
-        boost::uint32_t num_linestrings(0);
-        if (!value_parser<boost::uint32_t>::parse(it, end, num_linestrings, order))
-        {
-            return false;
-        }
-
         typedef typename boost::range_value<MultiLinestring>::type linestring_type;
+        typedef linestring_parser<linestring_type> item_parser;
+        return multi_parser<MultiLinestring, item_parser>::parse(it, end, multi_linestring, order);
+    }
+};
 
-        std::size_t linestrings_parsed = 0;
-        while (linestrings_parsed < num_linestrings && it != end)
-        {
-            byte_order_type::enum_t linestring_order;
-            byte_order_parser::parse(it, end, linestring_order);
-            boost::geometry::range::resize(multi_linestring, linestrings_parsed + 1);
-            bool success = linestring_parser
-            <
-                linestring_type
-            >::parse(it, end, boost::geometry::range::back(multi_linestring), linestring_order);
-            if (!success) return false;
-            ++linestrings_parsed;
-        }
-        return true;
+template <typename MultiPolygon>
+struct multi_polygon_parser
+{
+    template <typename Iterator>
+    static bool parse(Iterator& it, Iterator end, MultiPolygon& multi_polygon,
+                byte_order_type::enum_t order)
+    {
+        typedef typename boost::range_value<MultiPolygon>::type polygon_type;
+        typedef polygon_parser<polygon_type> item_parser;
+        return multi_parser<MultiPolygon, item_parser>::parse(it, end, multi_polygon, order);
     }
 };
 

@@ -246,7 +246,7 @@ namespace detail { namespace wkb
             uint32_t num_points = boost::size(multi_point);
             value_writer<uint32_t>::write(num_points, iter, byte_order);
 
-            for(typename boost::range_iterator<MultiPoint const>::type
+            for (typename boost::range_iterator<MultiPoint const>::type
                     point_iter = boost::begin(multi_point);
                 point_iter != boost::end(multi_point);
                 ++point_iter)
@@ -260,6 +260,39 @@ namespace detail { namespace wkb
         }
     };
 
+    template <typename Multi, typename ItemWriter>
+    struct multi_writer
+    {
+        template <typename OutputIterator>
+        static bool write(Multi const& multi,
+                          OutputIterator& iter,
+                          byte_order_type::enum_t byte_order)
+        {
+            // write endian type
+            value_writer<uint8_t>::write(byte_order, iter, byte_order);
+
+            // write geometry type
+            uint32_t type = geometry_type<Multi>::get();
+            value_writer<uint32_t>::write(type, iter, byte_order);
+
+            // write num rings
+            uint32_t num_items = geometry::num_geometries(multi);
+            value_writer<uint32_t>::write(num_items, iter, byte_order);
+
+            // write each polyline
+            for (typename boost::range_iterator<Multi const>::type multi_iter = boost::begin(multi);
+                multi_iter != boost::end(multi);
+                ++multi_iter)
+            {
+                if (!ItemWriter::write(*multi_iter, iter, byte_order))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+    };
+
     template <typename MultiLinestring>
     struct multi_linestring_writer
     {
@@ -268,33 +301,23 @@ namespace detail { namespace wkb
                           OutputIterator& iter,
                           byte_order_type::enum_t byte_order)
         {
-            // write endian type
-            value_writer<uint8_t>::write(byte_order, iter, byte_order);
+            typedef typename boost::range_value<MultiLinestring>::type linestring_type;
+            typedef linestring_writer<linestring_type> item_writer;
+            return multi_writer<MultiLinestring, item_writer>::write(multi_linestring, iter, byte_order);
+        }
+    };
 
-            // write geometry type
-            uint32_t type = geometry_type<MultiLinestring>::get();
-            value_writer<uint32_t>::write(type, iter, byte_order);
-
-            // write num rings
-            uint32_t num_linestrings = geometry::num_geometries(multi_linestring);
-            value_writer<uint32_t>::write(num_linestrings, iter, byte_order);
-
-            // write each polyline
-            for(typename boost::range_iterator<MultiLinestring const>::type
-                    polyline_iter = boost::begin(multi_linestring);
-                polyline_iter != boost::end(multi_linestring);
-                ++polyline_iter)
-            {
-                bool success = linestring_writer
-                <
-                    typename boost::range_value<MultiLinestring>::type
-                >::write(*polyline_iter, iter, byte_order);
-                if (!success)
-                {
-                    return false;
-                }
-            }
-            return true;
+    template <typename MultiPolygon>
+    struct multi_polygon_writer
+    {
+        template <typename OutputIterator>
+        static bool write(MultiPolygon const& multi_polygon,
+                          OutputIterator& iter,
+                          byte_order_type::enum_t byte_order)
+        {
+            typedef typename boost::range_value<MultiPolygon>::type polygon_type;
+            typedef polygon_writer<polygon_type> item_writer;
+            return multi_writer<MultiPolygon, item_writer>::write(multi_polygon, iter, byte_order);
         }
     };
 

@@ -84,6 +84,17 @@ struct write_wkb<multi_linestring_tag, G>
     }
 };
 
+template <typename G>
+struct write_wkb<multi_polygon_tag, G>
+{
+    template <typename OutputIterator>
+    static inline bool write(const G& geometry, OutputIterator iter,
+                       detail::wkb::byte_order_type::enum_t byte_order)
+    {
+        return detail::wkb::multi_polygon_writer<G>::write(geometry, iter, byte_order);
+    }
+};
+
 } // namespace dispatch
 #endif // DOXYGEN_NO_DISPATCH
 

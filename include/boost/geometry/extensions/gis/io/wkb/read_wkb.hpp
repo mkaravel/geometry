@@ -86,6 +86,18 @@ struct read_wkb<multi_linestring_tag, Geometry>
     }
 };
 
+template <typename Geometry>
+struct read_wkb<multi_polygon_tag, Geometry>
+{
+    template <typename Iterator>
+    static inline bool parse(Iterator& it, Iterator end, Geometry& geometry,
+        detail::wkb::byte_order_type::enum_t order)
+    {
+        geometry::clear(geometry);
+        return detail::wkb::multi_polygon_parser<Geometry>::parse(it, end, geometry, order);
+    }
+};
+
 } // namespace dispatch
 #endif // DOXYGEN_NO_DISPATCH
 
