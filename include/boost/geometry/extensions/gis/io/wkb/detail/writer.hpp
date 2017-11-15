@@ -227,6 +227,77 @@ namespace detail { namespace wkb
         }
     };
 
+    template <typename MultiPoint>
+    struct multi_point_writer
+    {
+        template <typename OutputIterator>
+        static bool write(MultiPoint const& multi_point,
+                          OutputIterator& iter,
+                          byte_order_type::enum_t byte_order)
+        {
+            // write endian type
+            value_writer<uint8_t>::write(byte_order, iter, byte_order);
+
+            // write geometry type
+            uint32_t type = geometry_type<MultiPoint>::get();
+            value_writer<uint32_t>::write(type, iter, byte_order);
+
+            // write num points
+            uint32_t num_points = boost::size(multi_point);
+            value_writer<uint32_t>::write(num_points, iter, byte_order);
+
+            for(typename boost::range_iterator<MultiPoint const>::type
+                    point_iter = boost::begin(multi_point);
+                point_iter != boost::end(multi_point);
+                ++point_iter)
+            {
+                // write point's x, y, z
+                writer_assigner<typename point_type<MultiPoint>::type>
+                    ::run(*point_iter, iter, byte_order);
+            }
+
+            return true;
+        }
+    };
+
+    template <typename MultiLinestring>
+    struct multi_linestring_writer
+    {
+        template <typename OutputIterator>
+        static bool write(MultiLinestring const& multi_linestring,
+                          OutputIterator& iter,
+                          byte_order_type::enum_t byte_order)
+        {
+            // write endian type
+            value_writer<uint8_t>::write(byte_order, iter, byte_order);
+
+            // write geometry type
+            uint32_t type = geometry_type<MultiLinestring>::get();
+            value_writer<uint32_t>::write(type, iter, byte_order);
+
+            // write num rings
+            uint32_t num_linestrings = geometry::num_geometries(multi_linestring);
+            value_writer<uint32_t>::write(num_linestrings, iter, byte_order);
+
+            // write each polyline
+            for(typename boost::range_iterator<MultiLinestring const>::type
+                    polyline_iter = boost::begin(multi_linestring);
+                polyline_iter != boost::end(multi_linestring);
+                ++polyline_iter)
+            {
+                bool success = linestring_writer
+                <
+                    typename boost::range_value<MultiLinestring>::type
+                >::write(*polyline_iter, iter, byte_order);
+                if (!success)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+    };
+
 }} // namespace detail::wkb
 #endif // DOXYGEN_NO_IMPL
 

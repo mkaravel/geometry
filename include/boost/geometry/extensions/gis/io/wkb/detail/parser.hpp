@@ -210,7 +210,7 @@ struct point_container_parser
         {
             return false;
         }
-        
+
         typedef typename std::iterator_traits<Iterator>::difference_type size_type;
         if(num_points > (std::numeric_limits<boost::uint32_t>::max)() )
         {
@@ -313,6 +313,64 @@ struct polygon_parser
             ++rings_parsed;
         }
 
+        return true;
+    }
+};
+
+template <typename MultiPoint>
+struct multi_point_parser
+{
+    template <typename Iterator>
+    static bool parse(Iterator& it, Iterator end, MultiPoint& multi_point,
+                byte_order_type::enum_t order)
+    {
+        if (!geometry_type_parser<MultiPoint>::parse(it, end, order))
+        {
+            return false;
+        }
+
+        if(it == end)
+        {
+            throw boost::geometry::read_wkb_exception();
+        }
+
+        return point_container_parser<MultiPoint>::parse(it, end, multi_point, order);
+    }
+};
+
+template <typename MultiLinestring>
+struct multi_linestring_parser
+{
+    template <typename Iterator>
+    static bool parse(Iterator& it, Iterator end, MultiLinestring& multi_linestring,
+                byte_order_type::enum_t order)
+    {
+        if (!geometry_type_parser<MultiLinestring>::parse(it, end, order))
+        {
+            return false;
+        }
+
+        boost::uint32_t num_linestrings(0);
+        if (!value_parser<boost::uint32_t>::parse(it, end, num_linestrings, order))
+        {
+            return false;
+        }
+
+        typedef typename boost::range_value<MultiLinestring>::type linestring_type;
+
+        std::size_t linestrings_parsed = 0;
+        while (linestrings_parsed < num_linestrings && it != end)
+        {
+            byte_order_type::enum_t linestring_order;
+            byte_order_parser::parse(it, end, linestring_order);
+            boost::geometry::range::resize(multi_linestring, linestrings_parsed + 1);
+            bool success = linestring_parser
+            <
+                linestring_type
+            >::parse(it, end, boost::geometry::range::back(multi_linestring), linestring_order);
+            if (!success) return false;
+            ++linestrings_parsed;
+        }
         return true;
     }
 };
