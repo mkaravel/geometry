@@ -279,7 +279,7 @@ namespace detail { namespace wkb
             uint32_t num_items = geometry::num_geometries(multi);
             value_writer<uint32_t>::write(num_items, iter, byte_order);
 
-            // write each polyline
+            // write each item
             for (typename boost::range_iterator<Multi const>::type multi_iter = boost::begin(multi);
                 multi_iter != boost::end(multi);
                 ++multi_iter)
