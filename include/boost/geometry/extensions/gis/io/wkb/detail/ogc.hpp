@@ -72,7 +72,7 @@ struct geometry_type_ogc
         multipoint = 4,
         multilinestring = 5,
         multipolygon = 6,
-        //collection = 7
+        collection = 7
     };
 };
 
@@ -180,6 +180,11 @@ struct geometry_type<Geometry, CheckPolicy, multi_linestring_tag>
 template <typename Geometry, typename CheckPolicy>
 struct geometry_type<Geometry, CheckPolicy, multi_polygon_tag>
     : geometry_type_impl<Geometry, geometry_type_ogc::multipolygon>
+{};
+
+template <typename Geometry, typename CheckPolicy>
+struct geometry_type<Geometry, CheckPolicy, geometry_collection_tag>
+    : geometry_type_impl<Geometry, geometry_type_ogc::collection>
 {};
 
 }} // namespace detail::wkb
